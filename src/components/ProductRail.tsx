@@ -2,7 +2,7 @@
 
 import { useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import type { Product } from "@/lib/catalog";
+import type { Product } from "@/lib/format";
 import { ProductCard } from "./ProductCard";
 import { Reveal, RevealGroup } from "./Reveal";
 

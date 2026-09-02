@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { ArrowRight, Truck, ShieldCheck, RotateCcw } from "lucide-react";
-import { formatINR, inr, type Product } from "@/lib/catalog";
+import { formatINR, inr, type Product } from "@/lib/format";
 
 const WORDS = ["Everything.", "Faster.", "Cheaper.", "Zylo."];
 

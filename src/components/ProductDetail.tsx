@@ -20,12 +20,19 @@ import {
   inr,
   mrp,
   type Product,
-} from "@/lib/catalog";
+} from "@/lib/format";
+import type { Review } from "@/db/schema";
 import { useCart } from "@/lib/cart";
 import { Stars } from "./ProductCard";
 import { Reveal } from "./Reveal";
 
-export function ProductDetail({ product }: { product: Product }) {
+export function ProductDetail({
+  product,
+  reviews,
+}: {
+  product: Product;
+  reviews: Review[];
+}) {
   const { add } = useCart();
   const [active, setActive] = useState(0);
   const [qty, setQty] = useState(1);
@@ -39,9 +46,9 @@ export function ProductDetail({ product }: { product: Product }) {
 
   const breakdown = [5, 4, 3, 2, 1].map((star) => ({
     star,
-    count: product.reviews.filter((r) => Math.round(r.rating) === star).length,
+    count: reviews.filter((r) => Math.round(r.rating) === star).length,
   }));
-  const totalReviews = product.reviews.length || 1;
+  const totalReviews = reviews.length || 1;
 
   return (
     <div className="mx-auto max-w-[1400px] px-4 py-6 sm:px-6">
@@ -144,7 +151,7 @@ export function ProductDetail({ product }: { product: Product }) {
           <div className="mt-3 flex items-center gap-3">
             <Stars rating={product.rating} size={14} />
             <span className="text-xs text-haze">
-              {product.reviews.length} ratings
+              {reviews.length} ratings
             </span>
           </div>
 
@@ -242,7 +249,7 @@ export function ProductDetail({ product }: { product: Product }) {
               whileHover={soldOut ? undefined : { scale: 1.02 }}
               whileTap={soldOut ? undefined : { scale: 0.97 }}
               disabled={soldOut}
-              onClick={() => add(product.id, qty)}
+              onClick={() => add(product, qty)}
               className="mt-5 w-full rounded-full bg-gradient-to-r from-flame to-flame-2 py-3.5 text-sm font-bold text-white shadow-lg shadow-flame/25 disabled:cursor-not-allowed disabled:from-white/15 disabled:to-white/15 disabled:text-haze disabled:shadow-none"
             >
               {soldOut ? "Out of stock" : "Add to cart"}
@@ -251,7 +258,7 @@ export function ProductDetail({ product }: { product: Product }) {
               whileHover={soldOut ? undefined : { scale: 1.02 }}
               whileTap={soldOut ? undefined : { scale: 0.97 }}
               disabled={soldOut}
-              onClick={() => add(product.id, qty)}
+              onClick={() => add(product, qty)}
               className="mt-2.5 w-full rounded-full bg-white py-3.5 text-sm font-bold text-ink disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-haze"
             >
               Buy now
@@ -285,7 +292,7 @@ export function ProductDetail({ product }: { product: Product }) {
               <Stars rating={product.rating} size={14} />
             </div>
             <p className="mt-1 text-xs text-haze">
-              Based on {product.reviews.length} reviews
+              Based on {reviews.length} reviews
             </p>
 
             <div className="mt-4 space-y-1.5">
@@ -308,7 +315,7 @@ export function ProductDetail({ product }: { product: Product }) {
           </div>
 
           <ul className="grid gap-3 sm:grid-cols-2">
-            {product.reviews.map((r, i) => (
+            {reviews.map((r, i) => (
               <motion.li
                 key={i}
                 initial={{ opacity: 0, y: 16 }}
@@ -325,7 +332,7 @@ export function ProductDetail({ product }: { product: Product }) {
                 </div>
                 <p className="mt-2 text-sm leading-relaxed text-haze">{r.comment}</p>
                 <p className="mt-2 text-[11px] text-haze/60">
-                  {new Date(r.date).toLocaleDateString("en-IN", {
+                  {r.createdAt.toLocaleDateString("en-IN", {
                     day: "numeric",
                     month: "short",
                     year: "numeric",

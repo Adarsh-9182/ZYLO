@@ -1,5 +1,6 @@
 import { SearchResults } from "@/components/SearchResults";
-import type { SortKey } from "@/lib/catalog";
+import { allProducts, categories, priceBounds, search } from "@/lib/catalog";
+import type { SortKey } from "@/lib/format";
 
 const VALID_SORTS: SortKey[] = [
   "relevance",
@@ -19,6 +20,12 @@ export default async function SearchPage({
     ? (sort as SortKey)
     : "relevance";
 
+  const [items, cats, bounds] = await Promise.all([
+    q?.trim() ? search(q) : allProducts(),
+    categories(),
+    priceBounds(),
+  ]);
+
   // The filter state is seeded from the URL, and React keeps state across a
   // same-route navigation — so without this key, clicking a category chip
   // while already on /search would change the URL and nothing else.
@@ -28,6 +35,9 @@ export default async function SearchPage({
       query={q ?? ""}
       initialCategory={category ?? ""}
       initialSort={sortKey}
+      items={items}
+      categories={cats}
+      bounds={bounds}
     />
   );
 }
