@@ -51,6 +51,12 @@ export function categoryLabel(slug: string) {
 
 export const categories = [...new Set(products.map((p) => p.category))].sort();
 
+/** Derived from the catalog so the price filter can never exclude real items. */
+export const priceBounds = {
+  min: Math.min(...products.map((p) => inr(p.price))),
+  max: Math.max(...products.map((p) => inr(p.price))),
+};
+
 export function byId(id: number) {
   return products.find((p) => p.id === id);
 }

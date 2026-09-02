@@ -3,12 +3,25 @@
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
-import { Minus, Plus, ShoppingBag, Trash2, X } from "lucide-react";
+import { Check, Minus, Plus, ShoppingBag, Trash2, X } from "lucide-react";
+import { useCallback, useState } from "react";
 import { formatINR, inr } from "@/lib/catalog";
 import { useCart } from "@/lib/cart";
+import { useOverlay } from "@/lib/useOverlay";
 
 export function CartDrawer() {
-  const { open, setOpen, items, count, subtotal, savings, setQty, remove } = useCart();
+  const { open, setOpen, items, count, subtotal, savings, setQty, remove, clear } =
+    useCart();
+  const [placed, setPlaced] = useState(false);
+
+  // Closing also drops the confirmation screen, so reopening the cart never
+  // shows a stale "order placed" state.
+  const close = useCallback(() => {
+    setOpen(false);
+    setPlaced(false);
+  }, [setOpen]);
+  useOverlay(open, close);
+
   const freeShippingAt = 4999;
   const toFree = Math.max(0, freeShippingAt - subtotal);
   const progress = Math.min(100, (subtotal / freeShippingAt) * 100);
@@ -21,11 +34,14 @@ export function CartDrawer() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={() => setOpen(false)}
+            onClick={close}
             className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm"
           />
 
           <motion.aside
+            role="dialog"
+            aria-modal="true"
+            aria-label="Shopping cart"
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
@@ -39,7 +55,7 @@ export function CartDrawer() {
                 <span className="text-haze">({count})</span>
               </h2>
               <button
-                onClick={() => setOpen(false)}
+                onClick={close}
                 aria-label="Close cart"
                 className="rounded-full p-1.5 text-haze transition-colors hover:bg-white/10 hover:text-white"
               >
@@ -73,12 +89,37 @@ export function CartDrawer() {
             )}
 
             <div className="flex-1 overflow-y-auto px-5 py-4">
-              {items.length === 0 ? (
+              {placed ? (
+                <div className="flex h-full flex-col items-center justify-center gap-3 text-center">
+                  <motion.span
+                    initial={{ scale: 0.4, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ type: "spring", stiffness: 320, damping: 18 }}
+                    className="flex h-14 w-14 items-center justify-center rounded-full bg-flame"
+                  >
+                    <Check size={26} className="text-white" strokeWidth={3} />
+                  </motion.span>
+                  <p className="text-base font-bold text-white">Order placed</p>
+                  <p className="max-w-[16rem] text-xs leading-relaxed text-haze">
+                    This is a demo storefront, so no payment was taken and nothing
+                    will ship.
+                  </p>
+                  <button
+                    onClick={() => {
+                      setPlaced(false);
+                      close();
+                    }}
+                    className="mt-1 rounded-full bg-flame px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-flame-2"
+                  >
+                    Keep shopping
+                  </button>
+                </div>
+              ) : items.length === 0 ? (
                 <div className="flex h-full flex-col items-center justify-center gap-3 text-center">
                   <ShoppingBag size={38} className="text-white/15" />
                   <p className="text-sm text-haze">Cart is empty.</p>
                   <button
-                    onClick={() => setOpen(false)}
+                    onClick={close}
                     className="rounded-full bg-flame px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-flame-2"
                   >
                     Start shopping
@@ -99,7 +140,7 @@ export function CartDrawer() {
                       >
                         <Link
                           href={`/product/${product.id}`}
-                          onClick={() => setOpen(false)}
+                          onClick={close}
                           className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-white/5"
                         >
                           <Image
@@ -179,6 +220,10 @@ export function CartDrawer() {
                 <motion.button
                   whileHover={{ scale: 1.015 }}
                   whileTap={{ scale: 0.985 }}
+                  onClick={() => {
+                    setPlaced(true);
+                    clear();
+                  }}
                   className="w-full rounded-full bg-gradient-to-r from-flame to-flame-2 py-3.5 text-sm font-bold text-white shadow-lg shadow-flame/25"
                 >
                   Checkout · {formatINR(subtotal)}

@@ -19,8 +19,12 @@ export default async function SearchPage({
     ? (sort as SortKey)
     : "relevance";
 
+  // The filter state is seeded from the URL, and React keeps state across a
+  // same-route navigation — so without this key, clicking a category chip
+  // while already on /search would change the URL and nothing else.
   return (
     <SearchResults
+      key={`${q ?? ""}|${category ?? ""}|${sortKey}`}
       query={q ?? ""}
       initialCategory={category ?? ""}
       initialSort={sortKey}

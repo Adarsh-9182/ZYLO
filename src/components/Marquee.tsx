@@ -1,5 +1,3 @@
-"use client";
-
 const ITEMS = [
   "FREE DELIVERY OVER ₹4,999",
   "7-DAY RETURNS",
@@ -9,24 +7,33 @@ const ITEMS = [
   "NEXT-DAY DISPATCH",
 ];
 
+function Group({ duplicate = false }: { duplicate?: boolean }) {
+  return (
+    <div className="flex shrink-0 items-center" aria-hidden={duplicate}>
+      {ITEMS.map((item) => (
+        <span
+          key={item}
+          className="flex shrink-0 items-center gap-8 pr-8 text-[11px] font-bold uppercase tracking-[0.22em] text-white/70"
+        >
+          {item}
+          <span className="h-1 w-1 shrink-0 rounded-full bg-flame" />
+        </span>
+      ))}
+    </div>
+  );
+}
+
 /**
- * Duplicated once so the -50% translate loops seamlessly.
+ * Two identical groups on one track. Because each group carries its own
+ * trailing spacing, translating the track by exactly -50% lands on the start
+ * of the second group and the loop has no visible seam.
  */
 export function Marquee() {
-  const strip = [...ITEMS, ...ITEMS];
-
   return (
     <div className="relative flex overflow-hidden border-y border-white/10 bg-flame/[0.07] py-2.5">
-      <div className="animate-marquee flex shrink-0 items-center gap-8 pr-8">
-        {strip.map((item, i) => (
-          <span
-            key={i}
-            className="flex shrink-0 items-center gap-8 text-[11px] font-bold uppercase tracking-[0.22em] text-white/70"
-          >
-            {item}
-            <span className="h-1 w-1 rounded-full bg-flame" />
-          </span>
-        ))}
+      <div className="animate-marquee flex">
+        <Group />
+        <Group duplicate />
       </div>
     </div>
   );

@@ -53,10 +53,11 @@ export function ProductRail({
         className="no-scrollbar flex gap-4 overflow-x-auto px-4 pb-2 sm:px-6"
         stagger={0.05}
       >
+        {/* ProductCard must be a direct child: Framer Motion only propagates
+            variants through motion components, so a plain wrapper div here
+            would stop the stagger from ever reaching the cards. */}
         {products.map((p, i) => (
-          <div key={p.id} className="w-[15rem] shrink-0">
-            <ProductCard product={p} index={i} />
-          </div>
+          <ProductCard key={p.id} product={p} index={i} className="w-[15rem] shrink-0" />
         ))}
       </RevealGroup>
     </section>
