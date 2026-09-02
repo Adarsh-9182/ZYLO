@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
-import { categoryLabel } from "@/lib/catalog";
+import { categoryLabel } from "@/lib/format";
 import { revealItem, RevealGroup } from "./Reveal";
 
 export function CategoryRail({

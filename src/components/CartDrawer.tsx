@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Check, Minus, Plus, ShoppingBag, Trash2, X } from "lucide-react";
 import { useCallback, useState } from "react";
-import { formatINR, inr } from "@/lib/catalog";
+import { formatINR, inr } from "@/lib/format";
 import { useCart } from "@/lib/cart";
 import { useOverlay } from "@/lib/useOverlay";
 

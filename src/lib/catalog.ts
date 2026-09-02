@@ -1,124 +1,105 @@
-import raw from "@/data/products.json";
+import "server-only";
+import { and, asc, desc, eq, gte, ilike, lt, ne, or, sql } from "drizzle-orm";
+import { db } from "@/db";
+import { products as t, reviews as r } from "@/db/schema";
+import { inr } from "./format";
 
-export type Review = {
-  rating: number;
-  comment: string;
-  date: string;
-  reviewerName: string;
-};
+export type { Product, SortKey } from "./format";
+export { inr, formatINR, mrp, categoryLabel, sortProducts } from "./format";
 
-export type Product = {
-  id: number;
-  title: string;
-  description: string;
-  category: string;
-  price: number;
-  discountPercentage: number;
-  rating: number;
-  stock: number;
-  brand?: string;
-  thumbnail: string;
-  images: string[];
-  tags: string[];
-  reviews: Review[];
-  warrantyInformation: string;
-  shippingInformation: string;
-  returnPolicy: string;
-  availabilityStatus: string;
-};
-
-export const products: Product[] = (raw as { products: Product[] }).products;
-
-/** Rupee price. The source data is in dollars, so scale it to something that reads Indian. */
-export function inr(price: number) {
-  return Math.round(price * 84);
+export function allProducts() {
+  return db.select().from(t).orderBy(asc(t.id));
 }
-
-export function formatINR(value: number) {
-  return "₹" + value.toLocaleString("en-IN");
-}
-
-export function mrp(p: Product) {
-  return Math.round(inr(p.price) / (1 - p.discountPercentage / 100));
-}
-
-export function categoryLabel(slug: string) {
-  return slug
-    .split("-")
-    .map((w) => w[0].toUpperCase() + w.slice(1))
-    .join(" ");
-}
-
-export const categories = [...new Set(products.map((p) => p.category))].sort();
-
-/** Derived from the catalog so the price filter can never exclude real items. */
-export const priceBounds = {
-  min: Math.min(...products.map((p) => inr(p.price))),
-  max: Math.max(...products.map((p) => inr(p.price))),
-};
 
 export function byId(id: number) {
-  return products.find((p) => p.id === id);
+  return db.query.products.findFirst({ where: eq(t.id, id) });
 }
 
-export function byCategory(slug: string) {
-  return products.filter((p) => p.category === slug);
+export function reviewsFor(productId: number) {
+  return db
+    .select()
+    .from(r)
+    .where(eq(r.productId, productId))
+    .orderBy(desc(r.createdAt));
+}
+
+export function byCategory(slug: string, limit?: number) {
+  const q = db.select().from(t).where(eq(t.category, slug)).orderBy(asc(t.id));
+  return limit ? q.limit(limit) : q;
+}
+
+/** Same-category picks for the "you might also like" rail on a product page. */
+export function related(p: { id: number; category: string }, count = 6) {
+  return db
+    .select()
+    .from(t)
+    .where(and(eq(t.category, p.category), ne(t.id, p.id)))
+    .limit(count);
+}
+
+export async function categories() {
+  const rows = await db
+    .selectDistinct({ category: t.category })
+    .from(t)
+    .orderBy(asc(t.category));
+  return rows.map((row) => row.category);
+}
+
+/** Derived from the catalog so the price filter can never exclude real items. */
+export async function priceBounds() {
+  const [row] = await db
+    .select({ min: sql<number>`min(${t.price})`, max: sql<number>`max(${t.price})` })
+    .from(t);
+  return { min: inr(row.min), max: inr(row.max) };
 }
 
 /** Deals = biggest discounts, which is what an offers rail should actually surface. */
-export const deals = [...products]
-  .sort((a, b) => b.discountPercentage - a.discountPercentage)
-  .slice(0, 12);
-
-export const topRated = [...products]
-  .filter((p) => p.rating >= 4.5)
-  .sort((a, b) => b.rating - a.rating)
-  .slice(0, 12);
-
-export function search(query: string) {
-  const q = query.trim().toLowerCase();
-  if (!q) return [];
-  return products.filter(
-    (p) =>
-      p.title.toLowerCase().includes(q) ||
-      p.category.toLowerCase().includes(q) ||
-      (p.brand ?? "").toLowerCase().includes(q) ||
-      p.tags.some((t) => t.toLowerCase().includes(q))
-  );
+export function deals(limit = 12) {
+  return db.select().from(t).orderBy(desc(t.discountPercentage)).limit(limit);
 }
 
-export type SortKey = "relevance" | "price-asc" | "price-desc" | "rating" | "discount";
+export function topRated(limit = 12) {
+  return db
+    .select()
+    .from(t)
+    .where(gte(t.rating, 4.5))
+    .orderBy(desc(t.rating))
+    .limit(limit);
+}
 
-export function sortProducts(list: Product[], key: SortKey) {
-  const copy = [...list];
-  switch (key) {
-    case "price-asc":
-      return copy.sort((a, b) => a.price - b.price);
-    case "price-desc":
-      return copy.sort((a, b) => b.price - a.price);
-    case "rating":
-      return copy.sort((a, b) => b.rating - a.rating);
-    case "discount":
-      return copy.sort((a, b) => b.discountPercentage - a.discountPercentage);
-    default:
-      return copy;
-  }
+/** Low stock reads as "selling fast", which is what the trending rail is for. */
+export function trending(limit = 12) {
+  return db.select().from(t).where(lt(t.stock, 40)).orderBy(asc(t.id)).limit(limit);
+}
+
+export function search(query: string, limit = 200) {
+  const q = query.trim();
+  if (!q) return Promise.resolve([]);
+  const like = `%${q}%`;
+  return db
+    .select()
+    .from(t)
+    .where(
+      or(
+        ilike(t.title, like),
+        ilike(t.category, like),
+        ilike(t.brand, like),
+        sql`exists (select 1 from unnest(${t.tags}) tag where tag ilike ${like})`
+      )
+    )
+    .orderBy(asc(t.id))
+    .limit(limit);
 }
 
 /** Category tiles for the home rail: name, how many items, one representative image. */
-export function categoryEntries() {
-  const map = new Map<string, { slug: string; count: number; image: string }>();
-  for (const p of products) {
-    const found = map.get(p.category);
-    if (found) found.count += 1;
-    else map.set(p.category, { slug: p.category, count: 1, image: p.thumbnail });
-  }
-  return [...map.values()].sort((a, b) => b.count - a.count);
-}
-
-/** Same-category picks, used for the "you might also like" rail on a product page. */
-export function related(p: Product, count = 6) {
-  return products
-    .filter((x) => x.category === p.category && x.id !== p.id)
-    .slice(0, count);
+export async function categoryEntries() {
+  return db
+    .select({
+      slug: t.category,
+      count: sql<number>`count(*)::int`,
+      image: sql<string>`min(${t.thumbnail})`,
+    })
+    .from(t)
+    .groupBy(t.category)
+    .orderBy(desc(sql`count(*)`));
 }
