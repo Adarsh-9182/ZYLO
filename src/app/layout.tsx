@@ -5,6 +5,7 @@ import { Providers } from "@/components/Providers";
 import { Header } from "@/components/Header";
 import { CartDrawer } from "@/components/CartDrawer";
 import { Footer } from "@/components/Footer";
+import { categories } from "@/lib/catalog";
 
 const outfit = Outfit({
   variable: "--font-outfit",
@@ -23,9 +24,11 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const cats = await categories();
+
   return (
     <html lang="en">
       <body className={`${outfit.variable} font-sans antialiased`}>
@@ -37,11 +40,11 @@ export default function RootLayout({
             Skip to content
           </a>
           <div className="relative z-10 flex min-h-screen flex-col">
-            <Header />
+            <Header categories={cats} />
             <main id="main" className="flex-1">
               {children}
             </main>
-            <Footer />
+            <Footer categories={cats} />
           </div>
           <CartDrawer />
         </Providers>

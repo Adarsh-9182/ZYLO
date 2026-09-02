@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { categoryLabel, categories } from "@/lib/catalog";
+import { categoryLabel } from "@/lib/format";
 
 const COLUMNS = [
   {
@@ -31,7 +31,7 @@ const COLUMNS = [
   },
 ];
 
-export function Footer() {
+export function Footer({ categories }: { categories: string[] }) {
   return (
     <footer className="relative mt-16 border-t border-white/10 bg-ink-2/60">
       <div className="mx-auto max-w-[1400px] px-4 py-14 sm:px-6">

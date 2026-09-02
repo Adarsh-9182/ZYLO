@@ -1,11 +1,12 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { byId, categoryLabel, products, related } from "@/lib/catalog";
+import { allProducts, byId, categoryLabel, related, reviewsFor } from "@/lib/catalog";
 import { ProductDetail } from "@/components/ProductDetail";
 import { ProductRail } from "@/components/ProductRail";
 
-export function generateStaticParams() {
-  return products.map((p) => ({ id: String(p.id) }));
+export async function generateStaticParams() {
+  const all = await allProducts();
+  return all.map((p) => ({ id: String(p.id) }));
 }
 
 export async function generateMetadata({
@@ -14,7 +15,7 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
-  const product = byId(Number(id));
+  const product = await byId(Number(id));
   if (!product) return { title: "Not found — Zylo" };
 
   return {
@@ -34,16 +35,21 @@ export default async function ProductPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const product = byId(Number(id));
+  const product = await byId(Number(id));
   if (!product) notFound();
+
+  const [alike, productReviews] = await Promise.all([
+    related(product, 10),
+    reviewsFor(product.id),
+  ]);
 
   return (
     <>
-      <ProductDetail product={product} />
+      <ProductDetail product={product} reviews={productReviews} />
       <ProductRail
         eyebrow={categoryLabel(product.category)}
         title="You might also like"
-        products={related(product, 10)}
+        products={alike}
       />
     </>
   );

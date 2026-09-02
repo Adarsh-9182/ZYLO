@@ -3,9 +3,10 @@ import { ArrowRight } from "lucide-react";
 import {
   categoryEntries,
   deals,
-  products,
   topRated,
+  trending,
   byCategory,
+  allProducts,
 } from "@/lib/catalog";
 import { Hero } from "@/components/Hero";
 import { Marquee } from "@/components/Marquee";
@@ -13,15 +14,22 @@ import { CategoryRail } from "@/components/CategoryRail";
 import { ProductRail, ProductGrid } from "@/components/ProductRail";
 import { Reveal } from "@/components/Reveal";
 
-export default function Home() {
-  const floats = [
-    ...byCategory("smartphones").slice(0, 2),
-    ...byCategory("mens-watches").slice(0, 1),
-    ...byCategory("sunglasses").slice(0, 1),
-    ...byCategory("laptops").slice(0, 1),
-  ];
+export default async function Home() {
+  // One round trip for the whole page rather than a query per rail.
+  const [phones, watches, shades, laptops, entries, dealItems, rated, hot, shelf] =
+    await Promise.all([
+      byCategory("smartphones", 2),
+      byCategory("mens-watches", 1),
+      byCategory("sunglasses", 1),
+      byCategory("laptops", 1),
+      categoryEntries(),
+      deals(),
+      topRated(),
+      trending(),
+      allProducts(),
+    ]);
 
-  const trending = products.filter((p) => p.stock < 40).slice(0, 12);
+  const floats = [...phones, ...watches, ...shades, ...laptops];
 
   return (
     <>
@@ -37,10 +45,10 @@ export default function Home() {
             Shop by category
           </h2>
         </Reveal>
-        <CategoryRail entries={categoryEntries()} />
+        <CategoryRail entries={entries} />
       </section>
 
-      <ProductRail eyebrow="Up to 20% off" title="Today's deals" products={deals} />
+      <ProductRail eyebrow="Up to 20% off" title="Today's deals" products={dealItems} />
 
       {/* full-bleed promo */}
       <Reveal className="px-4 sm:px-6">
@@ -74,8 +82,8 @@ export default function Home() {
         </div>
       </Reveal>
 
-      <ProductRail eyebrow="4.5★ and above" title="Top rated" products={topRated} />
-      <ProductRail eyebrow="Selling fast" title="Trending now" products={trending} />
+      <ProductRail eyebrow="4.5★ and above" title="Top rated" products={rated} />
+      <ProductRail eyebrow="Selling fast" title="Trending now" products={hot} />
 
       <section className="px-4 py-10 sm:px-6">
         <Reveal className="mb-6 flex items-end justify-between gap-4">
@@ -94,7 +102,7 @@ export default function Home() {
             See all →
           </Link>
         </Reveal>
-        <ProductGrid products={products.slice(0, 20)} />
+        <ProductGrid products={shelf.slice(0, 20)} />
       </section>
     </>
   );

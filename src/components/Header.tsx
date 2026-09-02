@@ -6,13 +6,21 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Search, ShoppingCart, MapPin, X } from "lucide-react";
-import { categories, categoryLabel, formatINR, inr, search } from "@/lib/catalog";
+import { categoryLabel, formatINR, inr } from "@/lib/format";
 import { useCart } from "@/lib/cart";
 import { Logo } from "./Logo";
 
 const NAV = ["smartphones", "laptops", "mens-watches", "womens-bags", "beauty", "groceries"];
 
-export function Header() {
+type Suggestion = {
+  id: number;
+  title: string;
+  category: string;
+  price: number;
+  thumbnail: string;
+};
+
+export function Header({ categories }: { categories: string[] }) {
   const router = useRouter();
   const { count, setOpen } = useCart();
   const [q, setQ] = useState("");
@@ -23,7 +31,28 @@ export function Header() {
   const { scrollY } = useScroll();
   useMotionValueEvent(scrollY, "change", (v) => setStuck(v > 12));
 
-  const suggestions = q.trim().length > 1 ? search(q).slice(0, 6) : [];
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+
+  // Type-ahead runs in the browser, so it asks the search API rather than the
+  // database. Debounced, and stale responses are dropped on unmount.
+  useEffect(() => {
+    const term = q.trim();
+    if (term.length < 2) {
+      setSuggestions([]);
+      return;
+    }
+    const controller = new AbortController();
+    const timer = setTimeout(() => {
+      fetch(`/api/search?q=${encodeURIComponent(term)}`, { signal: controller.signal })
+        .then((res) => res.json())
+        .then((data) => setSuggestions(data.results ?? []))
+        .catch(() => {});
+    }, 180);
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [q]);
 
   // Close the suggestion sheet on an outside click.
   useEffect(() => {

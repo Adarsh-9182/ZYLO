@@ -4,7 +4,7 @@ import { motion, useMotionTemplate, useMotionValue, useSpring } from "framer-mot
 import Image from "next/image";
 import Link from "next/link";
 import { Star, Plus } from "lucide-react";
-import { formatINR, inr, mrp, type Product } from "@/lib/catalog";
+import { formatINR, inr, mrp, type Product } from "@/lib/format";
 import { useCart } from "@/lib/cart";
 import { revealItem } from "./Reveal";
 
@@ -120,7 +120,7 @@ export function ProductCard({
             <motion.button
               type="button"
               aria-label={`Add ${product.title} to cart`}
-              onClick={() => add(product.id)}
+              onClick={() => add(product)}
               whileTap={{ scale: 0.9 }}
               className="absolute bottom-2.5 right-2.5 z-30 flex h-9 w-9 translate-y-3 items-center justify-center rounded-full bg-flame text-white opacity-0 shadow-lg shadow-flame/40 transition-all duration-300 hover:bg-flame-2 focus-visible:translate-y-0 focus-visible:opacity-100 group-hover:translate-y-0 group-hover:opacity-100"
             >

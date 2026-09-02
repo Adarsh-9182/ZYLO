@@ -4,16 +4,13 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useCallback, useMemo, useState } from "react";
 import { SlidersHorizontal, X } from "lucide-react";
 import {
-  categories,
   categoryLabel,
   formatINR,
   inr,
-  priceBounds,
-  products,
-  search,
   sortProducts,
+  type Product,
   type SortKey,
-} from "@/lib/catalog";
+} from "@/lib/format";
 import { useOverlay } from "@/lib/useOverlay";
 import { ProductCard } from "./ProductCard";
 import { RevealGroup } from "./Reveal";
@@ -32,22 +29,27 @@ const SORTS: { key: SortKey; label: string }[] = [
  * The slider therefore moves on a log scale: position 0-100 maps
  * geometrically onto the real price range.
  */
-const { min: MIN_PRICE, max: MAX_PRICE } = priceBounds;
-const RATIO = Math.log(MAX_PRICE / MIN_PRICE);
-
-function posToPrice(pos: number) {
-  return Math.round(MIN_PRICE * Math.exp((pos / 100) * RATIO));
+function posToPrice(pos: number, min: number, max: number) {
+  return Math.round(min * Math.exp((pos / 100) * Math.log(max / min)));
 }
 
 export function SearchResults({
   query,
   initialCategory,
   initialSort,
+  items,
+  categories,
+  bounds,
 }: {
   query: string;
   initialCategory: string;
   initialSort: SortKey;
+  /** Already narrowed to the query on the server; the filters below refine it. */
+  items: Product[];
+  categories: string[];
+  bounds: { min: number; max: number };
 }) {
+  const { min: MIN_PRICE, max: MAX_PRICE } = bounds;
   const [cats, setCats] = useState<string[]>(initialCategory ? [initialCategory] : []);
   const [sort, setSort] = useState<SortKey>(initialSort);
   const [pricePos, setPricePos] = useState(100);
@@ -57,9 +59,9 @@ export function SearchResults({
   const closeFilters = useCallback(() => setFiltersOpen(false), []);
   useOverlay(filtersOpen, closeFilters);
 
-  const maxPrice = posToPrice(pricePos);
+  const maxPrice = posToPrice(pricePos, MIN_PRICE, MAX_PRICE);
   const priceCapped = pricePos < 100;
-  const base = query ? search(query) : products;
+  const base = items;
 
   const results = useMemo(() => {
     const filtered = base.filter(

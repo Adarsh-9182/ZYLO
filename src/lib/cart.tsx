@@ -8,7 +8,7 @@ import {
   useMemo,
   useState,
 } from "react";
-import { byId, inr, type Product } from "./catalog";
+import { inr, type Product } from "./format";
 
 type Line = { id: number; qty: number };
 
@@ -20,7 +20,7 @@ type CartState = {
   savings: number;
   open: boolean;
   setOpen: (v: boolean) => void;
-  add: (id: number, qty?: number) => void;
+  add: (product: Product, qty?: number) => void;
   remove: (id: number) => void;
   setQty: (id: number, qty: number) => void;
   clear: () => void;
@@ -58,20 +58,50 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     } catch {}
   }, [lines, hydrated]);
 
+  // Only ids live in storage, and products now live in the database — so the
+  // cart resolves them over the API and caches what it has already looked up.
+  const [catalog, setCatalog] = useState<Record<number, Product>>({});
+
+  const missing = useMemo(
+    () => lines.map((l) => l.id).filter((id) => !catalog[id]),
+    [lines, catalog]
+  );
+
+  useEffect(() => {
+    if (missing.length === 0) return;
+    const controller = new AbortController();
+    fetch(`/api/products?ids=${missing.join(",")}`, { signal: controller.signal })
+      .then((res) => res.json())
+      .then((data: { products: Product[] }) => {
+        setCatalog((prev) => {
+          const next = { ...prev };
+          for (const p of data.products) next[p.id] = p;
+          return next;
+        });
+      })
+      .catch(() => {});
+    return () => controller.abort();
+  }, [missing]);
+
   // Quantities are clamped to stock here rather than in the UI, so no entry
-  // point — quick-add, product page, the drawer's +  — can oversell an item.
-  const add = useCallback((id: number, qty = 1) => {
-    const product = byId(id);
-    if (!product || product.stock === 0) return;
+  // point — quick-add, product page, the drawer's + — can oversell an item.
+  // This is the convenience clamp only; checkout re-checks stock server-side.
+  // The caller always holds the product, so passing it in also seeds the cache
+  // and saves the lookup fetch.
+  const add = useCallback((product: Product, qty = 1) => {
+    if (product.stock === 0) return;
+    setCatalog((prev) => (prev[product.id] ? prev : { ...prev, [product.id]: product }));
 
     setLines((prev) => {
-      const found = prev.find((l) => l.id === id);
+      const found = prev.find((l) => l.id === product.id);
       if (found) {
         return prev.map((l) =>
-          l.id === id ? { ...l, qty: Math.min(product.stock, l.qty + qty) } : l
+          l.id === product.id
+            ? { ...l, qty: Math.min(product.stock, l.qty + qty) }
+            : l
         );
       }
-      return [...prev, { id, qty: Math.min(product.stock, qty) }];
+      return [...prev, { id: product.id, qty: Math.min(product.stock, qty) }];
     });
     setOpen(true);
   }, []);
@@ -80,14 +110,19 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setLines((prev) => prev.filter((l) => l.id !== id));
   }, []);
 
-  const setQty = useCallback((id: number, qty: number) => {
-    const stock = byId(id)?.stock ?? 0;
-    setLines((prev) =>
-      qty <= 0
-        ? prev.filter((l) => l.id !== id)
-        : prev.map((l) => (l.id === id ? { ...l, qty: Math.min(stock, qty) } : l))
-    );
-  }, []);
+  const setQty = useCallback(
+    (id: number, qty: number) => {
+      // Anything with a visible quantity control is already resolved, so the
+      // cache is the stock source here.
+      const stock = catalog[id]?.stock ?? 0;
+      setLines((prev) =>
+        qty <= 0
+          ? prev.filter((l) => l.id !== id)
+          : prev.map((l) => (l.id === id ? { ...l, qty: Math.min(stock, qty) } : l))
+      );
+    },
+    [catalog]
+  );
 
   const clear = useCallback(() => setLines([]), []);
 
@@ -95,11 +130,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     () =>
       lines
         .map((l) => {
-          const product = byId(l.id);
+          const product = catalog[l.id];
           return product ? { product, qty: l.qty } : null;
         })
         .filter((x): x is { product: Product; qty: number } => x !== null),
-    [lines]
+    [lines, catalog]
   );
 
   const count = items.reduce((n, i) => n + i.qty, 0);
