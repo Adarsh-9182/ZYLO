@@ -34,6 +34,7 @@ export function ProductDetail({ product }: { product: Product }) {
   const price = inr(product.price);
   const was = mrp(product);
   const off = Math.round(product.discountPercentage);
+  const soldOut = product.stock === 0;
   const gallery = product.images.length > 0 ? product.images : [product.thumbnail];
 
   const breakdown = [5, 4, 3, 2, 1].map((star) => ({
@@ -238,18 +239,20 @@ export function ProductDetail({ product }: { product: Product }) {
             </div>
 
             <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.97 }}
+              whileHover={soldOut ? undefined : { scale: 1.02 }}
+              whileTap={soldOut ? undefined : { scale: 0.97 }}
+              disabled={soldOut}
               onClick={() => add(product.id, qty)}
-              className="mt-5 w-full rounded-full bg-gradient-to-r from-flame to-flame-2 py-3.5 text-sm font-bold text-white shadow-lg shadow-flame/25"
+              className="mt-5 w-full rounded-full bg-gradient-to-r from-flame to-flame-2 py-3.5 text-sm font-bold text-white shadow-lg shadow-flame/25 disabled:cursor-not-allowed disabled:from-white/15 disabled:to-white/15 disabled:text-haze disabled:shadow-none"
             >
-              Add to cart
+              {soldOut ? "Out of stock" : "Add to cart"}
             </motion.button>
             <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.97 }}
+              whileHover={soldOut ? undefined : { scale: 1.02 }}
+              whileTap={soldOut ? undefined : { scale: 0.97 }}
+              disabled={soldOut}
               onClick={() => add(product.id, qty)}
-              className="mt-2.5 w-full rounded-full bg-white py-3.5 text-sm font-bold text-ink"
+              className="mt-2.5 w-full rounded-full bg-white py-3.5 text-sm font-bold text-ink disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-haze"
             >
               Buy now
             </motion.button>

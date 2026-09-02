@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Outfit } from "next/font/google";
 import "./globals.css";
-import { CartProvider } from "@/lib/cart";
+import { Providers } from "@/components/Providers";
 import { Header } from "@/components/Header";
 import { CartDrawer } from "@/components/CartDrawer";
 import { Footer } from "@/components/Footer";
@@ -29,14 +29,22 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${outfit.variable} font-sans antialiased`}>
-        <CartProvider>
+        <Providers>
+          <a
+            href="#main"
+            className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:rounded-full focus:bg-flame focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white"
+          >
+            Skip to content
+          </a>
           <div className="relative z-10 flex min-h-screen flex-col">
             <Header />
-            <main className="flex-1">{children}</main>
+            <main id="main" className="flex-1">
+              {children}
+            </main>
             <Footer />
           </div>
           <CartDrawer />
-        </CartProvider>
+        </Providers>
       </body>
     </html>
   );

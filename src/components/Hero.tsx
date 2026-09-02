@@ -1,9 +1,9 @@
 "use client";
 
-import { motion, useScroll, useTransform } from "framer-motion";
+import { AnimatePresence, motion, useScroll, useTransform } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowRight, Truck, ShieldCheck, RotateCcw } from "lucide-react";
 import { formatINR, inr, type Product } from "@/lib/catalog";
 
@@ -11,6 +11,13 @@ const WORDS = ["Everything.", "Faster.", "Cheaper.", "Zylo."];
 
 export function Hero({ floats }: { floats: Product[] }) {
   const ref = useRef<HTMLElement>(null);
+  const [word, setWord] = useState(0);
+
+  useEffect(() => {
+    const id = setInterval(() => setWord((w) => (w + 1) % WORDS.length), 2200);
+    return () => clearInterval(id);
+  }, []);
+
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ["start start", "end start"],
@@ -75,23 +82,21 @@ export function Hero({ floats }: { floats: Product[] }) {
             <div className="mt-4 flex h-7 items-center gap-2 text-lg text-haze">
               <span>One cart for</span>
               <span className="relative inline-block h-7 w-[7.5rem] overflow-hidden">
-                {WORDS.map((w, i) => (
+                {/* One word on screen at a time, swapped by a timer. Stacking
+                    all four with staggered keyframe delays drifted out of sync
+                    and left visible gaps between words. */}
+                <AnimatePresence mode="wait">
                   <motion.span
-                    key={w}
+                    key={WORDS[word]}
+                    initial={{ y: "110%" }}
+                    animate={{ y: "0%" }}
+                    exit={{ y: "-110%" }}
+                    transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
                     className="absolute inset-0 font-semibold text-flame-2"
-                    animate={{ y: ["110%", "0%", "0%", "-110%"] }}
-                    transition={{
-                      duration: WORDS.length * 2,
-                      times: [0, 0.06, 0.22, 0.28],
-                      delay: i * 2,
-                      repeat: Infinity,
-                      repeatDelay: (WORDS.length - 1) * 2 - 2,
-                      ease: [0.16, 1, 0.3, 1],
-                    }}
                   >
-                    {w}
+                    {WORDS[word]}
                   </motion.span>
-                ))}
+                </AnimatePresence>
               </span>
             </div>
 
