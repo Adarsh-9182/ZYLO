@@ -3,23 +3,18 @@
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
-import { Check, Minus, Plus, ShoppingBag, Trash2, X } from "lucide-react";
-import { useCallback, useState } from "react";
+import { Minus, Plus, ShoppingBag, Trash2, X } from "lucide-react";
+import { useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { formatINR, inr } from "@/lib/format";
 import { useCart } from "@/lib/cart";
 import { useOverlay } from "@/lib/useOverlay";
 
 export function CartDrawer() {
-  const { open, setOpen, items, count, subtotal, savings, setQty, remove, clear } =
-    useCart();
-  const [placed, setPlaced] = useState(false);
+  const { open, setOpen, items, count, subtotal, savings, setQty, remove } = useCart();
+  const router = useRouter();
 
-  // Closing also drops the confirmation screen, so reopening the cart never
-  // shows a stale "order placed" state.
-  const close = useCallback(() => {
-    setOpen(false);
-    setPlaced(false);
-  }, [setOpen]);
+  const close = useCallback(() => setOpen(false), [setOpen]);
   useOverlay(open, close);
 
   const freeShippingAt = 4999;
@@ -89,32 +84,7 @@ export function CartDrawer() {
             )}
 
             <div className="flex-1 overflow-y-auto px-5 py-4">
-              {placed ? (
-                <div className="flex h-full flex-col items-center justify-center gap-3 text-center">
-                  <motion.span
-                    initial={{ scale: 0.4, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ type: "spring", stiffness: 320, damping: 18 }}
-                    className="flex h-14 w-14 items-center justify-center rounded-full bg-flame"
-                  >
-                    <Check size={26} className="text-white" strokeWidth={3} />
-                  </motion.span>
-                  <p className="text-base font-bold text-white">Order placed</p>
-                  <p className="max-w-[16rem] text-xs leading-relaxed text-haze">
-                    This is a demo storefront, so no payment was taken and nothing
-                    will ship.
-                  </p>
-                  <button
-                    onClick={() => {
-                      setPlaced(false);
-                      close();
-                    }}
-                    className="mt-1 rounded-full bg-flame px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-flame-2"
-                  >
-                    Keep shopping
-                  </button>
-                </div>
-              ) : items.length === 0 ? (
+              {items.length === 0 ? (
                 <div className="flex h-full flex-col items-center justify-center gap-3 text-center">
                   <ShoppingBag size={38} className="text-white/15" />
                   <p className="text-sm text-haze">Cart is empty.</p>
@@ -217,12 +187,15 @@ export function CartDrawer() {
                     You save {formatINR(savings)} on this order
                   </p>
                 )}
+                {/* This used to empty the cart and show a success screen
+                    without an address, an order or a row in any table. It now
+                    goes to a checkout that actually places one. */}
                 <motion.button
                   whileHover={{ scale: 1.015 }}
                   whileTap={{ scale: 0.985 }}
                   onClick={() => {
-                    setPlaced(true);
-                    clear();
+                    setOpen(false);
+                    router.push("/checkout");
                   }}
                   className="w-full rounded-full bg-gradient-to-r from-flame to-flame-2 py-3.5 text-sm font-bold text-white shadow-lg shadow-flame/25"
                 >
