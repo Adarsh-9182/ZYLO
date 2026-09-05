@@ -11,7 +11,27 @@ export function allProducts() {
   return db.select().from(t).orderBy(asc(t.id));
 }
 
+/**
+ * Zylo's own products — the ones with a designed poster.
+ *
+ * Ordered by id, which is the order they were authored in and the order the
+ * posters were made in; there is no ranking to apply to five items, and a
+ * rail that reshuffles itself between visits is harder to point someone at.
+ */
+export function houseProducts() {
+  return db.select().from(t).where(eq(t.house, true)).orderBy(asc(t.id));
+}
+
+/**
+ * One product, or undefined.
+ *
+ * The id is validated here rather than at each call site. /product/[id] takes
+ * it straight from the URL, so `Number("abc")` reaches this as NaN — and
+ * Postgres rejects NaN for an integer column, which surfaced as a 500 on any
+ * non-numeric path instead of the 404 the page already knew how to render.
+ */
 export function byId(id: number) {
+  if (!Number.isInteger(id) || id <= 0) return Promise.resolve(undefined);
   return db.query.products.findFirst({ where: eq(t.id, id) });
 }
 

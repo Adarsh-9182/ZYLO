@@ -21,6 +21,9 @@ export async function generateMetadata({
   return {
     title: `${product.title} — Zylo`,
     description: product.description,
+    // Each product page is reachable at exactly one path; saying so stops a
+    // crawler treating ?ref= and friends as separate pages.
+    alternates: { canonical: `/product/${product.id}` },
     openGraph: {
       title: product.title,
       description: product.description,

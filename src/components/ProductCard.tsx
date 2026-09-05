@@ -31,11 +31,9 @@ export function Stars({ rating, size = 12 }: { rating: number; size?: number }) 
 
 export function ProductCard({
   product,
-  index = 0,
   className = "",
 }: {
   product: Product;
-  index?: number;
   className?: string;
 }) {
   const { add } = useCart();
