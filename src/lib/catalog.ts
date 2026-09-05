@@ -11,6 +11,17 @@ export function allProducts() {
   return db.select().from(t).orderBy(asc(t.id));
 }
 
+/**
+ * Zylo's own products — the ones with a designed poster.
+ *
+ * Ordered by id, which is the order they were authored in and the order the
+ * posters were made in; there is no ranking to apply to five items, and a
+ * rail that reshuffles itself between visits is harder to point someone at.
+ */
+export function houseProducts() {
+  return db.select().from(t).where(eq(t.house, true)).orderBy(asc(t.id));
+}
+
 export function byId(id: number) {
   return db.query.products.findFirst({ where: eq(t.id, id) });
 }

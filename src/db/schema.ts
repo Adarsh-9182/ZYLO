@@ -7,7 +7,10 @@ import {
   real,
   timestamp,
   index,
+  boolean,
+  jsonb,
 } from "drizzle-orm/pg-core";
+import type { Creative } from "@/data/creative";
 
 export const products = pgTable(
   "products",
@@ -29,11 +32,32 @@ export const products = pgTable(
     shippingInformation: text("shipping_information"),
     returnPolicy: text("return_policy"),
     availabilityStatus: varchar("availability_status", { length: 32 }),
+
+    /**
+     * Zylo's own products, as opposed to the seeded catalog.
+     *
+     * The rest of this table is sourced data — useful for building against,
+     * but not something Zylo sells. These five are, and they are presented
+     * differently because what exists for them is different: a designed
+     * poster rather than a cut-out on white.
+     */
+    house: boolean("house").notNull().default(false),
+
+    /**
+     * The poster's editorial content, or null for a sourced product.
+     *
+     * Kept as one document rather than a dozen columns because it is one
+     * thing — the creative — and because its shape is the design system: a
+     * new product is authored by filling this in, which is what makes the
+     * next poster look like these five. See data/creative.ts.
+     */
+    creative: jsonb("creative").$type<Creative>(),
   },
   (t) => [
     index("products_category_idx").on(t.category),
     index("products_rating_idx").on(t.rating),
     index("products_discount_idx").on(t.discountPercentage),
+    index("products_house_idx").on(t.house),
   ]
 );
 

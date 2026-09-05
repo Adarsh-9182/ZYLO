@@ -7,16 +7,18 @@ import {
   trending,
   byCategory,
   allProducts,
+  houseProducts,
 } from "@/lib/catalog";
 import { Hero } from "@/components/Hero";
 import { Marquee } from "@/components/Marquee";
 import { CategoryRail } from "@/components/CategoryRail";
 import { ProductRail, ProductGrid } from "@/components/ProductRail";
 import { Reveal } from "@/components/Reveal";
+import { VerifiedRail } from "@/components/VerifiedRail";
 
 export default async function Home() {
   // One round trip for the whole page rather than a query per rail.
-  const [phones, watches, shades, laptops, entries, dealItems, rated, hot, shelf] =
+  const [phones, watches, shades, laptops, entries, dealItems, rated, hot, shelf, house] =
     await Promise.all([
       byCategory("smartphones", 2),
       byCategory("mens-watches", 1),
@@ -27,6 +29,7 @@ export default async function Home() {
       topRated(),
       trending(),
       allProducts(),
+      houseProducts(),
     ]);
 
   const floats = [...phones, ...watches, ...shades, ...laptops];
@@ -34,6 +37,11 @@ export default async function Home() {
   return (
     <>
       <Hero floats={floats} />
+
+      {/* Before the categories, the deals and the sourced shelf: the five
+          products that are actually ours. */}
+      <VerifiedRail products={house} />
+
       <Marquee />
 
       <section className="py-10">
