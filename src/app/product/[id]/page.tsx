@@ -4,6 +4,20 @@ import { allProducts, byId, categoryLabel, related, reviewsFor } from "@/lib/cat
 import { ProductDetail } from "@/components/ProductDetail";
 import { ProductRail } from "@/components/ProductRail";
 
+/**
+ * Rebuild this page at most once a minute, in the background.
+ *
+ * It is prerendered, which is right — it is the same for everyone and should
+ * be fast. But prerendered at *build time only* meant a price lived in the
+ * HTML until the next deploy: Rahul could change what a product sells for,
+ * the database would agree, and the shop would keep quoting the old figure to
+ * every visitor. For a shop that is not a caching detail, it is wrong prices.
+ *
+ * Sixty seconds keeps the page as fast as it was and bounds how stale a price
+ * can be.
+ */
+export const revalidate = 60;
+
 export async function generateStaticParams() {
   const all = await allProducts();
   return all.map((p) => ({ id: String(p.id) }));

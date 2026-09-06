@@ -12,11 +12,15 @@ import type { Creative } from "./creative";
  * page and the image cannot drift apart. Specifications come from the source
  * listings.
  *
- * PRICES ARE PLACEHOLDERS. Only one real figure was available (the top lists
- * at ₹349 on the source), so the rest are round retail guesses at a 50% strike
- * — set them properly before this is anything but a demo. `price` is stored in
- * the same notional dollars as the rest of the table and multiplied by 84 for
- * display, so the INR figure each one produces is written beside it.
+ * Prices are the ones Rahul set, product by product — not guesses. MRP is
+ * derived rather than stored (`mrp()` divides the selling price by
+ * 1 - discountPercentage), so each discount below is whatever makes that
+ * derivation land exactly on the market price he named. Change a selling
+ * price and its discount has to be recomputed with it, or the struck-through
+ * figure quietly drifts away from what was agreed.
+ *
+ * `price` is stored in the same notional dollars as the rest of the table and
+ * multiplied by 84 for display, so the rupee figure is written beside each.
  */
 
 export interface VerifiedProduct {
@@ -50,8 +54,8 @@ export const VERIFIED: readonly VerifiedProduct[] = [
       "Twelve pairs of gold-plated studs and hoops on one card, one for every month: pearl, crystal, clover, heart, sunburst. Lightweight alloy with a skin-friendly finish, made to be mixed rather than matched.",
     category: "womens-jewellery",
     brand: "Zylo",
-    price: inr(499), // ₹499
-    discountPercentage: 50,
+    price: inr(219), // ₹219, struck through at ₹250
+    discountPercentage: 12.4,
     rating: 4.3,
     stock: 60,
     thumbnail: "/verified/earring-set-12-pairs.jpg",
@@ -88,8 +92,8 @@ export const VERIFIED: readonly VerifiedProduct[] = [
       "A short crepe kurti with a notch neck, cold shoulders and a laced back, finished with pom-pom trim along the sleeves and hem. Above-knee length, cut to fall over wide-leg denim.",
     category: "tops",
     brand: "Zylo",
-    price: inr(599), // ₹599
-    discountPercentage: 50,
+    price: inr(380), // ₹380, struck through at ₹440
+    discountPercentage: 13.636363636363637,
     rating: 3.7,
     stock: 45,
     thumbnail: "/verified/pom-pom-top-front.jpg",
@@ -124,8 +128,8 @@ export const VERIFIED: readonly VerifiedProduct[] = [
       "A premium cotton-blend oversized tee with a full-back Gojo Satoru print and a small chest mark on the front. Unisex cut, dropped shoulders, built to hold its print through the wash.",
     category: "mens-shirts",
     brand: "Zylo",
-    price: inr(699), // ₹699
-    discountPercentage: 50,
+    price: inr(250), // ₹250, struck through at ₹320
+    discountPercentage: 21.875,
     rating: 4.4,
     stock: 70,
     thumbnail: "/verified/gojo-tee-front.jpg",
@@ -161,8 +165,8 @@ export const VERIFIED: readonly VerifiedProduct[] = [
       "A silky, matte-finish sunscreen with niacinamide and vitamin C — broad-spectrum SPF 50 PA+++ that absorbs fast and leaves no white cast. Sheer natural tint, 60ml.",
     category: "skin-care",
     brand: "SunSwitch",
-    price: inr(449), // ₹449
-    discountPercentage: 50,
+    price: inr(150), // ₹150, struck through at ₹249
+    discountPercentage: 39.75903614457831,
     rating: 4.5,
     stock: 80,
     thumbnail: "/verified/sunswitch-spf50.jpg",
@@ -200,8 +204,8 @@ export const VERIFIED: readonly VerifiedProduct[] = [
       "Three black-coated stainless knives with matching covers: a 29.5cm utility, a 29cm cleaver and a 23.5cm paring knife. Corrosion-resistant blades and dimpled ergonomic handles.",
     category: "kitchen-accessories",
     brand: "Zylo",
-    price: inr(899), // ₹899
-    discountPercentage: 50,
+    price: inr(209), // ₹209, struck through at ₹299
+    discountPercentage: 30.100334448160538,
     rating: 4.2,
     stock: 40,
     thumbnail: "/verified/knife-set-6-piece.jpg",

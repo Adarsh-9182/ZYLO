@@ -2,13 +2,24 @@
 
 import { motion, type Variants } from "framer-motion";
 
+/**
+ * Opacity and transform only — deliberately no blur.
+ *
+ * This used to animate `filter: blur(6px)` to `blur(0px)`. Opacity and
+ * transform are composited on the GPU and cost the phone almost nothing;
+ * `filter` is not, so every frame of every reveal forced a repaint of the
+ * element underneath it. On a laptop that is invisible. On a phone, with
+ * dozens of these on one page, it is the jank — and the reason the site felt
+ * fine on a desktop and heavy on a handset.
+ *
+ * The entrance reads the same without it.
+ */
 const variants: Variants = {
-  hidden: { opacity: 0, y: 28, filter: "blur(6px)" },
+  hidden: { opacity: 0, y: 24 },
   show: {
     opacity: 1,
     y: 0,
-    filter: "blur(0px)",
-    transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1] },
+    transition: { duration: 0.55, ease: [0.16, 1, 0.3, 1] },
   },
 };
 
