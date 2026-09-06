@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Check,
   ChevronRight,
@@ -33,7 +34,8 @@ export function ProductDetail({
   product: Product;
   reviews: Review[];
 }) {
-  const { add } = useCart();
+  const { add, setOpen } = useCart();
+  const router = useRouter();
   const [active, setActive] = useState(0);
   const [qty, setQty] = useState(1);
   const [zoom, setZoom] = useState({ on: false, x: 50, y: 50 });
@@ -254,11 +256,19 @@ export function ProductDetail({
             >
               {soldOut ? "Out of stock" : "Add to cart"}
             </motion.button>
+            {/* "Buy now" used to call add() — the same thing the button above
+                it does — so the two were indistinguishable and neither bought
+                anything. It now does what it says: takes the item and goes
+                straight to checkout. */}
             <motion.button
               whileHover={soldOut ? undefined : { scale: 1.02 }}
               whileTap={soldOut ? undefined : { scale: 0.97 }}
               disabled={soldOut}
-              onClick={() => add(product, qty)}
+              onClick={() => {
+                add(product, qty);
+                setOpen(false);
+                router.push("/checkout");
+              }}
               className="mt-2.5 w-full rounded-full bg-white py-3.5 text-sm font-bold text-ink disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-haze"
             >
               Buy now

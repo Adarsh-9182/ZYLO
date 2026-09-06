@@ -56,8 +56,8 @@ export function ProductRail({
         {/* ProductCard must be a direct child: Framer Motion only propagates
             variants through motion components, so a plain wrapper div here
             would stop the stagger from ever reaching the cards. */}
-        {products.map((p, i) => (
-          <ProductCard key={p.id} product={p} index={i} className="w-[15rem] shrink-0" />
+        {products.map((p) => (
+          <ProductCard key={p.id} product={p} className="w-[15rem] shrink-0" />
         ))}
       </RevealGroup>
     </section>
@@ -70,8 +70,8 @@ export function ProductGrid({ products }: { products: Product[] }) {
       className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
       stagger={0.04}
     >
-      {products.map((p, i) => (
-        <ProductCard key={p.id} product={p} index={i} />
+      {products.map((p) => (
+        <ProductCard key={p.id} product={p} />
       ))}
     </RevealGroup>
   );

@@ -29,6 +29,9 @@ const SORTS: { key: SortKey; label: string }[] = [
  * The slider therefore moves on a log scale: position 0-100 maps
  * geometrically onto the real price range.
  */
+/** One screenful and a bit — enough to fill a 4-column grid several rows deep. */
+const PAGE = 24;
+
 function posToPrice(pos: number, min: number, max: number) {
   return Math.round(min * Math.exp((pos / 100) * Math.log(max / min)));
 }
@@ -56,6 +59,17 @@ export function SearchResults({
   const [minRating, setMinRating] = useState(0);
   const [filtersOpen, setFiltersOpen] = useState(false);
 
+  /**
+   * How many results are on screen.
+   *
+   * /search with no query is the whole catalog, and it was rendering every
+   * row at once — 199 product cards, each with an image and a reveal
+   * animation, on first paint. Paging is the fix that costs the least: the
+   * filtering above still runs over everything, so counts and sorting are
+   * unchanged, and only what is shown grows.
+   */
+  const [shown, setShown] = useState(PAGE);
+
   const closeFilters = useCallback(() => setFiltersOpen(false), []);
   useOverlay(filtersOpen, closeFilters);
 
@@ -72,6 +86,18 @@ export function SearchResults({
     );
     return sortProducts(filtered, sort);
   }, [base, cats, priceCapped, maxPrice, minRating, sort]);
+
+  // A narrower filter should not leave the reader ten pages deep in a list
+  // that no longer has ten pages.
+  const resultKey = `${results.length}|${sort}|${cats.join()}|${priceCapped}|${minRating}`;
+  const [pagedFor, setPagedFor] = useState(resultKey);
+  if (pagedFor !== resultKey) {
+    setPagedFor(resultKey);
+    setShown(PAGE);
+  }
+
+  const visible = results.slice(0, shown);
+  const remaining = results.length - visible.length;
 
   function toggleCat(c: string) {
     setCats((prev) => (prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]));
@@ -236,10 +262,24 @@ export function SearchResults({
               className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4"
               stagger={0.03}
             >
-              {results.map((p, i) => (
-                <ProductCard key={p.id} product={p} index={i} />
+              {visible.map((p) => (
+                <ProductCard key={p.id} product={p} />
               ))}
             </RevealGroup>
+          )}
+
+          {remaining > 0 && (
+            <div className="mt-8 flex flex-col items-center gap-3">
+              <p className="text-xs text-haze">
+                Showing {visible.length} of {results.length}
+              </p>
+              <button
+                onClick={() => setShown((n) => n + PAGE)}
+                className="rounded-full bg-white px-7 py-3 text-sm font-bold text-ink transition-transform hover:scale-[1.03]"
+              >
+                Show {Math.min(PAGE, remaining)} more
+              </button>
+            </div>
           )}
         </div>
       </div>

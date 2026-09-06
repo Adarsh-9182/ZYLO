@@ -20,6 +20,8 @@ type Suggestion = {
   thumbnail: string;
 };
 
+const EMPTY: Suggestion[] = [];
+
 export function Header({ categories }: { categories: string[] }) {
   const router = useRouter();
   const { count, setOpen } = useCart();
@@ -31,28 +33,40 @@ export function Header({ categories }: { categories: string[] }) {
   const { scrollY } = useScroll();
   useMotionValueEvent(scrollY, "change", (v) => setStuck(v > 12));
 
-  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  /**
+   * Type-ahead results, tagged with the term they answer.
+   *
+   * The tag is what makes this derivable. Clearing the list from inside the
+   * effect meant a synchronous setState on every keystroke that fell under
+   * two characters — a cascading render, and the thing the react-hooks rule
+   * flags. Remembering which term a result set belongs to means the list for
+   * a term the user has already moved on from is simply not rendered, with no
+   * state to reset: no cascade, and no flash of the previous term's matches
+   * while the next request is still in flight.
+   */
+  const term = q.trim();
+  const [answered, setAnswered] = useState<{ term: string; items: Suggestion[] }>({
+    term: "",
+    items: [],
+  });
+  const suggestions = answered.term === term ? answered.items : EMPTY;
 
-  // Type-ahead runs in the browser, so it asks the search API rather than the
-  // database. Debounced, and stale responses are dropped on unmount.
+  // Runs in the browser, so it asks the search API rather than the database.
+  // Debounced, and an in-flight response is dropped when the term moves on.
   useEffect(() => {
-    const term = q.trim();
-    if (term.length < 2) {
-      setSuggestions([]);
-      return;
-    }
+    if (term.length < 2) return;
     const controller = new AbortController();
     const timer = setTimeout(() => {
       fetch(`/api/search?q=${encodeURIComponent(term)}`, { signal: controller.signal })
         .then((res) => res.json())
-        .then((data) => setSuggestions(data.results ?? []))
+        .then((data) => setAnswered({ term, items: data.results ?? [] }))
         .catch(() => {});
     }, 180);
     return () => {
       clearTimeout(timer);
       controller.abort();
     };
-  }, [q]);
+  }, [term]);
 
   // Close the suggestion sheet on an outside click.
   useEffect(() => {

@@ -39,6 +39,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   // Read once on mount rather than seeding useState, so the server and the
   // first client render agree. Storage can throw in private windows, so every
   // access is guarded.
+  //
+  // set-state-in-effect is disabled deliberately rather than worked around.
+  // The rule is right that most effects should not set state — but localStorage
+  // cannot be read while rendering without desynchronising the server's HTML
+  // from the client's first paint, which is the bug this shape exists to
+  // avoid. Reading it here, once, is the supported way to hydrate from a
+  // browser-only store.
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     try {
       const saved = localStorage.getItem(KEY);
@@ -46,6 +54,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     } catch {}
     setHydrated(true);
   }, []);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   useEffect(() => {
     // Both effects run on the first commit, and this one would otherwise write
