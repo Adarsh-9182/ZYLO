@@ -18,6 +18,18 @@ export function allProducts() {
  * posters were made in; there is no ranking to apply to five items, and a
  * rail that reshuffles itself between visits is harder to point someone at.
  */
+/**
+ * A page of the catalog.
+ *
+ * The home page used to call allProducts() and then slice twenty rows off the
+ * front, which meant every visit pulled all 199 rows out of Postgres and
+ * serialised them into the page just to throw 179 away. The limit belongs in
+ * the query.
+ */
+export function someProducts(limit = 20) {
+  return db.select().from(t).orderBy(asc(t.id)).limit(limit);
+}
+
 export function houseProducts() {
   return db.select().from(t).where(eq(t.house, true)).orderBy(asc(t.id));
 }

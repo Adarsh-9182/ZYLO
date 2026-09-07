@@ -6,7 +6,7 @@ import {
   topRated,
   trending,
   byCategory,
-  allProducts,
+  someProducts,
   houseProducts,
 } from "@/lib/catalog";
 import { Hero } from "@/components/Hero";
@@ -15,6 +15,20 @@ import { CategoryRail } from "@/components/CategoryRail";
 import { ProductRail, ProductGrid } from "@/components/ProductRail";
 import { Reveal } from "@/components/Reveal";
 import { VerifiedRail } from "@/components/VerifiedRail";
+
+/**
+ * Rebuild this page at most once a minute, in the background.
+ *
+ * It is prerendered, which is right — it is the same for everyone and should
+ * be fast. But prerendered at *build time only* meant a price lived in the
+ * HTML until the next deploy: Rahul could change what a product sells for,
+ * the database would agree, and the shop would keep quoting the old figure to
+ * every visitor. For a shop that is not a caching detail, it is wrong prices.
+ *
+ * Sixty seconds keeps the page as fast as it was and bounds how stale a price
+ * can be.
+ */
+export const revalidate = 60;
 
 export default async function Home() {
   // One round trip for the whole page rather than a query per rail.
@@ -25,10 +39,10 @@ export default async function Home() {
       byCategory("sunglasses", 1),
       byCategory("laptops", 1),
       categoryEntries(),
-      deals(),
-      topRated(),
-      trending(),
-      allProducts(),
+      deals(8),
+      topRated(8),
+      trending(8),
+      someProducts(8),
       houseProducts(),
     ]);
 
@@ -110,7 +124,7 @@ export default async function Home() {
             See all →
           </Link>
         </Reveal>
-        <ProductGrid products={shelf.slice(0, 20)} />
+        <ProductGrid products={shelf} />
       </section>
     </>
   );

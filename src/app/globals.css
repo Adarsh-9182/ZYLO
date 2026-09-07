@@ -81,7 +81,26 @@ body::before {
     rgba(255, 255, 255, 0.02)
   );
   border: 1px solid rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(14px);
+}
+
+/*
+ * The frosted blur, on hardware that can afford it.
+ *
+ * backdrop-filter makes the browser sample and blur everything behind the
+ * element, every frame it changes. One of those is free. This page renders
+ * about seventy-five .glass elements, and on a phone GPU that was the single
+ * biggest cause of the site feeling heavy while looking fine on a laptop.
+ *
+ * Almost all of them sit on an opaque dark background where the blur has
+ * nothing to reveal — the gradient and the hairline border are what actually
+ * make the surface read as glass. So the blur is kept for pointer devices with
+ * a large viewport, where it costs nothing noticeable, and dropped on small
+ * screens, where it cost everything and showed nothing.
+ */
+@media (min-width: 1024px) {
+  .glass {
+    backdrop-filter: blur(14px);
+  }
 }
 
 .text-gradient {

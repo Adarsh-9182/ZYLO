@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { Search, ShoppingCart, MapPin, X } from "lucide-react";
+import { Search, ShoppingCart, MapPin, X, User } from "lucide-react";
 import { categoryLabel, formatINR, inr } from "@/lib/format";
 import { useCart } from "@/lib/cart";
 import { Logo } from "./Logo";
@@ -172,6 +172,21 @@ export function Header({ categories }: { categories: string[] }) {
               )}
             </AnimatePresence>
           </div>
+
+          {/* Sign in.
+              Accounts are not built yet, so this goes to a page that says so
+              rather than to a form that cannot work. A button that opens
+              nothing teaches a shopper the site is broken; one that explains
+              itself does not. Placed before the cart because that is the order
+              people scan a shop header in. */}
+          <Link
+            href="/login"
+            aria-label="Sign in"
+            className="glass flex h-11 items-center gap-2 rounded-full px-3.5 transition-colors hover:border-flame/50 sm:px-4"
+          >
+            <User size={18} className="text-white" />
+            <span className="hidden text-sm font-semibold text-white sm:block">Sign in</span>
+          </Link>
 
           {/* cart */}
           <button
