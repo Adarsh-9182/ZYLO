@@ -5,10 +5,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { Search, ShoppingCart, MapPin, X, User } from "lucide-react";
+import { Search, ShoppingCart, X, User } from "lucide-react";
 import { categoryLabel, formatINR, inr } from "@/lib/format";
 import { useCart } from "@/lib/cart";
 import { Logo } from "./Logo";
+import { LocationPicker } from "./LocationPicker";
 
 const NAV = ["smartphones", "laptops", "mens-watches", "womens-bags", "beauty", "groceries"];
 
@@ -99,14 +100,7 @@ export function Header({ categories }: { categories: string[] }) {
         <div className="mx-auto flex h-16 max-w-[1400px] items-center gap-3 px-4 sm:gap-5 sm:px-6">
           <Logo />
 
-          <button className="hidden shrink-0 items-center gap-1.5 rounded-full px-2 py-1.5 text-left text-xs text-haze transition-colors hover:text-white lg:flex">
-            <MapPin size={15} className="text-flame" />
-            <span className="leading-tight">
-              Deliver to
-              <br />
-              <span className="font-semibold text-white">Punjab 144411</span>
-            </span>
-          </button>
+          <LocationPicker />
 
           {/* search */}
           <div ref={boxRef} className="relative flex-1">
