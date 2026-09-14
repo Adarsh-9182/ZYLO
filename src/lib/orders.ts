@@ -8,9 +8,13 @@ import type { Order, OrderItem } from "@/db/schema";
 
 export type { Order, OrderItem };
 
-/** Free delivery above this, matching what the home page promises. */
-export const FREE_DELIVERY_PAISE = 499900; // ₹4,999
-export const SHIPPING_PAISE = 4900; // ₹49
+/**
+ * Delivery is free on every order — there is no minimum. The threshold stays a
+ * parameter of the order query rather than being deleted from it, so a minimum
+ * can come back as a one-line change here if the business wants one again.
+ */
+export const FREE_DELIVERY_PAISE = 0;
+export const SHIPPING_PAISE = 4900; // ₹49, charged only below the threshold
 
 /**
  * The order reference a customer is given.

@@ -10,9 +10,11 @@ import { useCart } from "@/lib/cart";
 import { formatINR } from "@/lib/format";
 import { Reveal } from "./Reveal";
 
-/** Mirrors the server rule in lib/orders.ts. The server's answer is the real one. */
-const FREE_DELIVERY = 4999;
-const SHIPPING = 49;
+/**
+ * Delivery is free on every order. This mirrors the server rule in lib/orders.ts
+ * for display only — the total the order is placed at is the server's.
+ */
+const SHIPPING = 0;
 
 const FIELDS = [
   { name: "customerName", label: "Full name", autoComplete: "name", placeholder: "Adarsh Bhardwaj", span: 2 },
@@ -30,7 +32,7 @@ export function CheckoutForm() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const shipping = subtotal >= FREE_DELIVERY || subtotal === 0 ? 0 : SHIPPING;
+  const shipping = SHIPPING;
   const total = subtotal + shipping;
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
@@ -197,12 +199,6 @@ export function CheckoutForm() {
                 <dd>{formatINR(total)}</dd>
               </div>
             </dl>
-
-            {shipping > 0 && (
-              <p className="mt-3 text-[11.5px] leading-relaxed text-haze">
-                Add {formatINR(FREE_DELIVERY - subtotal)} more for free delivery.
-              </p>
-            )}
           </div>
         </aside>
       </div>

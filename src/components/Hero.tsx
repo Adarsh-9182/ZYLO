@@ -131,7 +131,7 @@ export function Hero({ floats }: { floats: Product[] }) {
               className="mt-9 flex flex-wrap gap-x-7 gap-y-3 text-xs text-haze"
             >
               {[
-                { icon: Truck, label: "Free delivery over ₹4,999" },
+                { icon: Truck, label: "Free delivery" },
                 { icon: RotateCcw, label: "7-day easy returns" },
                 { icon: ShieldCheck, label: "Secure payments" },
               ].map(({ icon: Icon, label }) => (
