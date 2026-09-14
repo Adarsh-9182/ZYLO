@@ -5,8 +5,6 @@ import { useCallback, useMemo, useState } from "react";
 import { SlidersHorizontal, X } from "lucide-react";
 import {
   categoryLabel,
-  formatINR,
-  inr,
   sortProducts,
   type Product,
   type SortKey,
@@ -23,18 +21,8 @@ const SORTS: { key: SortKey; label: string }[] = [
   { key: "discount", label: "Biggest discount" },
 ];
 
-/**
- * Prices run from about ₹66 to ₹31 lakh, so a linear slider spends 99% of its
- * travel on a handful of luxury items and can't separate anything cheap.
- * The slider therefore moves on a log scale: position 0-100 maps
- * geometrically onto the real price range.
- */
 /** One screenful and a bit — enough to fill a 4-column grid several rows deep. */
 const PAGE = 24;
-
-function posToPrice(pos: number, min: number, max: number) {
-  return Math.round(min * Math.exp((pos / 100) * Math.log(max / min)));
-}
 
 export function SearchResults({
   query,
@@ -42,7 +30,6 @@ export function SearchResults({
   initialSort,
   items,
   categories,
-  bounds,
 }: {
   query: string;
   initialCategory: string;
@@ -50,12 +37,9 @@ export function SearchResults({
   /** Already narrowed to the query on the server; the filters below refine it. */
   items: Product[];
   categories: string[];
-  bounds: { min: number; max: number };
 }) {
-  const { min: MIN_PRICE, max: MAX_PRICE } = bounds;
   const [cats, setCats] = useState<string[]>(initialCategory ? [initialCategory] : []);
   const [sort, setSort] = useState<SortKey>(initialSort);
-  const [pricePos, setPricePos] = useState(100);
   const [minRating, setMinRating] = useState(0);
   const [filtersOpen, setFiltersOpen] = useState(false);
 
@@ -73,23 +57,20 @@ export function SearchResults({
   const closeFilters = useCallback(() => setFiltersOpen(false), []);
   useOverlay(filtersOpen, closeFilters);
 
-  const maxPrice = posToPrice(pricePos, MIN_PRICE, MAX_PRICE);
-  const priceCapped = pricePos < 100;
   const base = items;
 
   const results = useMemo(() => {
     const filtered = base.filter(
       (p) =>
         (cats.length === 0 || cats.includes(p.category)) &&
-        (!priceCapped || inr(p.price) <= maxPrice) &&
         p.rating >= minRating
     );
     return sortProducts(filtered, sort);
-  }, [base, cats, priceCapped, maxPrice, minRating, sort]);
+  }, [base, cats, minRating, sort]);
 
   // A narrower filter should not leave the reader ten pages deep in a list
   // that no longer has ten pages.
-  const resultKey = `${results.length}|${sort}|${cats.join()}|${priceCapped}|${minRating}`;
+  const resultKey = `${results.length}|${sort}|${cats.join()}|${minRating}`;
   const [pagedFor, setPagedFor] = useState(resultKey);
   if (pagedFor !== resultKey) {
     setPagedFor(resultKey);
@@ -105,12 +86,11 @@ export function SearchResults({
 
   function reset() {
     setCats([]);
-    setPricePos(100);
     setMinRating(0);
     setSort("relevance");
   }
 
-  const activeCount = cats.length + (priceCapped ? 1 : 0) + (minRating > 0 ? 1 : 0);
+  const activeCount = cats.length + (minRating > 0 ? 1 : 0);
 
   const filters = (
     <div className="space-y-7">
@@ -134,26 +114,6 @@ export function SearchResults({
             </label>
           ))}
         </div>
-      </div>
-
-      <div>
-        <h3 className="mb-3 text-[11px] font-bold uppercase tracking-[0.16em] text-white">
-          Max price
-        </h3>
-        <input
-          type="range"
-          min={0}
-          max={100}
-          step={1}
-          value={pricePos}
-          onChange={(e) => setPricePos(Number(e.target.value))}
-          aria-label="Maximum price"
-          aria-valuetext={priceCapped ? `Up to ${formatINR(maxPrice)}` : "Any price"}
-          className="w-full accent-[var(--color-flame)]"
-        />
-        <p className="mt-1.5 text-sm font-semibold text-flame">
-          {priceCapped ? `Up to ${formatINR(maxPrice)}` : "Any price"}
-        </p>
       </div>
 
       <div>

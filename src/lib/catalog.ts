@@ -2,7 +2,6 @@ import "server-only";
 import { and, asc, desc, eq, gte, ilike, lt, ne, or, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { products as t, reviews as r } from "@/db/schema";
-import { inr } from "./format";
 
 export type { Product, SortKey } from "./format";
 export { inr, formatINR, mrp, categoryLabel, sortProducts } from "./format";
@@ -75,14 +74,6 @@ export async function categories() {
     .from(t)
     .orderBy(asc(t.category));
   return rows.map((row) => row.category);
-}
-
-/** Derived from the catalog so the price filter can never exclude real items. */
-export async function priceBounds() {
-  const [row] = await db
-    .select({ min: sql<number>`min(${t.price})`, max: sql<number>`max(${t.price})` })
-    .from(t);
-  return { min: inr(row.min), max: inr(row.max) };
 }
 
 /** Deals = biggest discounts, which is what an offers rail should actually surface. */

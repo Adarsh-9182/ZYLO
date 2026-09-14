@@ -17,10 +17,6 @@ export function CartDrawer() {
   const close = useCallback(() => setOpen(false), [setOpen]);
   useOverlay(open, close);
 
-  const freeShippingAt = 4999;
-  const toFree = Math.max(0, freeShippingAt - subtotal);
-  const progress = Math.min(100, (subtotal / freeShippingAt) * 100);
-
   return (
     <AnimatePresence>
       {open && (
@@ -57,31 +53,6 @@ export function CartDrawer() {
                 <X size={18} />
               </button>
             </div>
-
-            {/* free-shipping meter */}
-            {items.length > 0 && (
-              <div className="border-b border-white/10 px-5 py-3">
-                <p className="text-[11px] text-haze">
-                  {toFree > 0 ? (
-                    <>
-                      <span className="font-semibold text-white">{formatINR(toFree)}</span> away
-                      from free delivery
-                    </>
-                  ) : (
-                    <span className="font-semibold text-flame-2">
-                      Free delivery unlocked
-                    </span>
-                  )}
-                </p>
-                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
-                  <motion.div
-                    animate={{ width: `${progress}%` }}
-                    transition={{ type: "spring", stiffness: 200, damping: 30 }}
-                    className="h-full rounded-full bg-gradient-to-r from-flame to-flame-2"
-                  />
-                </div>
-              </div>
-            )}
 
             <div className="flex-1 overflow-y-auto px-5 py-4">
               {items.length === 0 ? (

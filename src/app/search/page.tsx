@@ -1,5 +1,5 @@
 import { SearchResults } from "@/components/SearchResults";
-import { allProducts, categories, priceBounds, search } from "@/lib/catalog";
+import { allProducts, categories, search } from "@/lib/catalog";
 import type { SortKey } from "@/lib/format";
 
 const VALID_SORTS: SortKey[] = [
@@ -20,10 +20,9 @@ export default async function SearchPage({
     ? (sort as SortKey)
     : "relevance";
 
-  const [items, cats, bounds] = await Promise.all([
+  const [items, cats] = await Promise.all([
     q?.trim() ? search(q) : allProducts(),
     categories(),
-    priceBounds(),
   ]);
 
   // The filter state is seeded from the URL, and React keeps state across a
@@ -37,7 +36,6 @@ export default async function SearchPage({
       initialSort={sortKey}
       items={items}
       categories={cats}
-      bounds={bounds}
     />
   );
 }
