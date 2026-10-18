@@ -142,8 +142,7 @@ export function VerifiedRail({ products }: { products: Product[] }) {
             Made by us
           </h2>
           <p className="mt-2 max-w-lg text-sm leading-relaxed text-haze">
-            Five products we source, photograph and stand behind ourselves — everything
-            else on this page is catalog.
+            Our own collection, selected with care and ready to discover.
           </p>
         </div>
 

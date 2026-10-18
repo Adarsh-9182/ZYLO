@@ -1,12 +1,6 @@
 import type { Metadata } from "next";
 import { Outfit } from "next/font/google";
 import "./globals.css";
-import { Providers } from "@/components/Providers";
-import { Header } from "@/components/Header";
-import { CartDrawer } from "@/components/CartDrawer";
-import { Footer } from "@/components/Footer";
-import { categories } from "@/lib/catalog";
-
 const outfit = Outfit({
   variable: "--font-outfit",
   subsets: ["latin"],
@@ -48,28 +42,9 @@ export const metadata: Metadata = {
 export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const cats = await categories();
-
   return (
-    <html lang="en">
-      <body className={`${outfit.variable} font-sans antialiased`}>
-        <Providers>
-          <a
-            href="#main"
-            className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:rounded-full focus:bg-flame focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white"
-          >
-            Skip to content
-          </a>
-          <div className="relative z-10 flex min-h-screen flex-col">
-            <Header categories={cats} />
-            <main id="main" className="flex-1">
-              {children}
-            </main>
-            <Footer categories={cats} />
-          </div>
-          <CartDrawer />
-        </Providers>
-      </body>
+    <html lang="en" data-scroll-behavior="smooth">
+      <body className={`${outfit.variable} font-sans antialiased`}>{children}</body>
     </html>
   );
 }

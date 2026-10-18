@@ -1,10 +1,10 @@
 const ITEMS = [
-  "FREE DELIVERY ON EVERY ORDER",
+  "DELIVERED TO YOUR DOOR",
   "7-DAY RETURNS",
   "COD AVAILABLE",
   "194 LIVE DEALS",
   "SHOP MORE. SAVE MORE.",
-  "NEXT-DAY DISPATCH",
+  "TRACK YOUR ORDER",
 ];
 
 function Group({ duplicate = false }: { duplicate?: boolean }) {

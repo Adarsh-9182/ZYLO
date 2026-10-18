@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Private owner setup and test artifacts
+.admin-*.json
+OWNER-SETUP.md
+/test-results/
+/playwright-report/

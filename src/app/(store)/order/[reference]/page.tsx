@@ -20,7 +20,7 @@ export default async function OrderPage({
   params: Promise<{ reference: string }>;
 }) {
   const { reference } = await params;
-  const found = await orderByReference(decodeURIComponent(reference));
+  const found = await orderByReference(reference);
   if (!found) notFound();
 
   const { order, items } = found;
@@ -33,7 +33,7 @@ export default async function OrderPage({
       <div className="flex flex-col items-center text-center">
         <CheckCircle2 size={40} className="text-emerald-400" strokeWidth={1.6} />
         <h1 className="mt-5 text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
-          Order confirmed
+          {order.status === "placed" ? "Order confirmed" : `Order ${order.status}`}
         </h1>
         <p className="mt-3 max-w-md text-sm leading-relaxed text-haze">
           Thanks {order.customerName.split(" ")[0]} — we have it. Keep this reference; it
@@ -73,6 +73,8 @@ export default async function OrderPage({
           </dl>
         </div>
       </div>
+
+      {(order.trackingNumber || order.carrier) && <div className="mt-5 rounded-2xl border border-white/10 p-5"><h2 className="text-sm font-bold">Delivery tracking</h2><p className="mt-2 text-sm text-haze">{order.carrier} · {order.trackingNumber}</p>{order.trackingUrl && <a href={order.trackingUrl} target="_blank" rel="noopener noreferrer" className="mt-3 inline-block text-sm text-flame">Track with courier ↗</a>}</div>}
 
       <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.03] p-5">
         <ul className="space-y-4">

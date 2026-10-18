@@ -1,3 +1,7 @@
+import { cookies } from "next/headers";
+import { randomBytes } from "node:crypto";
+import { adminSql } from "@/lib/admin/db";
+import { digest, rateLimit } from "@/lib/admin/auth";
 import { NextResponse } from "next/server";
 import { placeOrder, type OrderLine } from "@/lib/orders";
 
@@ -39,17 +43,32 @@ export async function POST(request: Request) {
 
   const address: Record<string, string> = {};
   for (const [field, min, max] of FIELDS) {
-    const value = typeof input[field] === "string" ? (input[field] as string).trim() : "";
+    const value =
+      typeof input[field] === "string" ? (input[field] as string).trim() : "";
     if (value.length < min || value.length > max)
-      return NextResponse.json({ error: `Please check the ${field === "customerName" ? "name" : field} field.` }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: `Please check the ${field === "customerName" ? "name" : field} field.`,
+        },
+        { status: 400 },
+      );
     address[field] = value;
   }
   if (!/^[^@\s]+@[^@\s.]+\.[^@\s]+$/.test(address.email!))
-    return NextResponse.json({ error: "That email address does not look right." }, { status: 400 });
+    return NextResponse.json(
+      { error: "That email address does not look right." },
+      { status: 400 },
+    );
   if (!/^\d{6}$/.test(address.pincode!))
-    return NextResponse.json({ error: "A PIN code is six digits." }, { status: 400 });
+    return NextResponse.json(
+      { error: "A PIN code is six digits." },
+      { status: 400 },
+    );
   if (!/^[\d+\-\s]{10,20}$/.test(address.phone!))
-    return NextResponse.json({ error: "That phone number does not look right." }, { status: 400 });
+    return NextResponse.json(
+      { error: "That phone number does not look right." },
+      { status: 400 },
+    );
 
   const rawLines = Array.isArray(input.lines) ? input.lines : [];
   if (rawLines.length > 50)
@@ -60,12 +79,52 @@ export async function POST(request: Request) {
     return { productId: Number(line.productId), qty: Number(line.qty) };
   });
 
-  const result = await placeOrder(lines, address as unknown as Parameters<typeof placeOrder>[1]);
-  if (!result.ok)
+  const requestKey =
+    typeof input.requestKey === "string" ? input.requestKey : "";
+  if (!/^[a-f0-9-]{36}$/i.test(requestKey))
     return NextResponse.json(
-      { error: MESSAGES[result.reason] ?? MESSAGES.invalid },
-      { status: result.reason === "unavailable" ? 409 : 400 }
+      { error: "Refresh checkout and try again." },
+      { status: 400 },
     );
+  try {
+    if (!(await rateLimit("checkout", 30)))
+      return NextResponse.json(
+        { error: "Too many checkout attempts. Please try again later." },
+        { status: 429 },
+      );
+    const result = await placeOrder(
+      lines,
+      address as unknown as Parameters<typeof placeOrder>[1],
+      requestKey,
+    );
+    if (!result.ok)
+      return NextResponse.json(
+        { error: MESSAGES[result.reason] ?? MESSAGES.invalid },
+        { status: result.reason === "unavailable" ? 409 : 400 },
+      );
 
-  return NextResponse.json({ reference: result.reference });
+    const sql = adminSql(),
+      token = randomBytes(32).toString("hex");
+    await sql`INSERT INTO order_access(token_hash,order_id,expires_at) SELECT ${digest(token)},id,now()+interval '30 days' FROM orders WHERE reference=${result.reference}`;
+    (await cookies()).set("zylo_order_" + result.reference, token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/order/" + result.reference,
+      maxAge: 60 * 60 * 24 * 30,
+    });
+    return NextResponse.json({ reference: result.reference });
+  } catch (e) {
+    console.error(
+      "Checkout failed",
+      (e as { code?: string }).code ?? "unknown",
+    );
+    return NextResponse.json(
+      {
+        error:
+          "We could not confirm this order. Please retry with the same checkout.",
+      },
+      { status: 503 },
+    );
+  }
 }

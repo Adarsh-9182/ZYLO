@@ -42,6 +42,11 @@ export const products = pgTable(
      * poster rather than a cut-out on white.
      */
     house: boolean("house").notNull().default(false),
+    active: boolean("active").notNull().default(true),
+    sku: varchar("sku", { length: 80 }),
+    version: integer("version").notNull().default(1),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 
     /**
      * The poster's editorial content, or null for a sourced product.
@@ -113,9 +118,18 @@ export const orders = pgTable(
     shippingPaise: integer("shipping_paise").notNull().default(0),
     totalPaise: integer("total_paise").notNull(),
 
+    requestKey: varchar("request_key", { length: 64 }),
+    requestHash: varchar("request_hash", { length: 64 }),
     paymentMethod: varchar("payment_method", { length: 20 }).notNull().default("cod"),
     status: varchar("status", { length: 20 }).notNull().default("placed"),
     placedAt: timestamp("placed_at").notNull().defaultNow(),
+    paymentStatus: varchar("payment_status", { length: 20 }).notNull().default("pending"),
+    carrier: varchar("carrier", { length: 100 }),
+    trackingNumber: varchar("tracking_number", { length: 120 }),
+    trackingUrl: text("tracking_url"),
+    internalNote: text("internal_note"),
+    version: integer("version").notNull().default(1),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index("orders_reference_idx").on(t.reference)]
 );

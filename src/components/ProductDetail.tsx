@@ -194,8 +194,8 @@ export function ProductDetail({
               { icon: RotateCcw, label: product.returnPolicy },
               { icon: ShieldCheck, label: product.warrantyInformation },
               { icon: Zap, label: product.availabilityStatus },
-            ].map(({ icon: Icon, label }) => (
-              <div key={label} className="flex items-center gap-2.5 text-xs text-haze">
+            ].filter(item=>Boolean(item.label)).map(({ icon: Icon, label }, index) => (
+              <div key={index} className="flex items-center gap-2.5 text-xs text-haze">
                 <Icon size={15} className="shrink-0 text-flame" />
                 {label}
               </div>

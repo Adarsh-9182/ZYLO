@@ -14,7 +14,7 @@ const COLUMNS = [
   {
     title: "Help",
     links: [
-      ["Track order", "#"],
+      ["Track order", "/track-order"],
       ["Returns & refunds", "#"],
       ["Shipping policy", "#"],
       ["Contact us", "#"],
@@ -25,13 +25,13 @@ const COLUMNS = [
     links: [
       ["About Zylo", "#"],
       ["Careers", "#"],
-      ["Sell on Zylo", "#"],
+      ["Business dashboard", "/admin"],
       ["Press", "#"],
     ] as const,
   },
 ];
 
-export function Footer({ categories }: { categories: string[] }) {
+export function Footer({ categories, supportEmail="", supportPhone="", storeName="Zylo" }: { categories: string[]; supportEmail?:string; supportPhone?:string; storeName?:string }) {
   return (
     <footer className="relative mt-16 border-t border-white/10 bg-ink-2/60">
       <div className="mx-auto max-w-[1400px] px-4 py-14 sm:px-6">
@@ -44,9 +44,9 @@ export function Footer({ categories }: { categories: string[] }) {
               SHOP MORE. <span className="text-flame">SAVE MORE.</span>
             </p>
             <p className="mt-5 max-w-xs text-sm leading-relaxed text-haze">
-              A storefront built for speed — 194 products, live deals and a cart that
-              keeps up with you.
+              Discover something you’ll love, with clear pricing, easy checkout and cash on delivery.
             </p>
+            {(supportEmail||supportPhone)&&<p className="mt-4 text-xs leading-loose text-haze">{supportEmail&&<a className="block hover:text-flame" href={`mailto:${supportEmail}`}>{supportEmail}</a>}{supportPhone&&<a className="block hover:text-flame" href={`tel:${supportPhone}`}>{supportPhone}</a>}</p>}
           </div>
 
           {COLUMNS.map((col) => (
@@ -83,8 +83,7 @@ export function Footer({ categories }: { categories: string[] }) {
             ))}
           </div>
           <p className="mt-6 text-[11px] text-haze/60">
-            © {new Date().getFullYear()} Zylo Commerce. Demo storefront — catalog data is
-            sample data, no real orders are placed.
+            © {new Date().getFullYear()} {storeName} Commerce. Orders are confirmed at checkout and paid on delivery.
           </p>
         </div>
       </div>

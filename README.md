@@ -70,5 +70,11 @@ src/
 
 ## Notes
 
-Demo storefront — checkout is not wired to a payment provider and no real orders are
-placed. Catalog data is sample data from [DummyJSON](https://dummyjson.com).
+Cash-on-delivery checkout persists orders and reserves stock. Online payments are not
+connected. The initial sample catalog comes from [DummyJSON](https://dummyjson.com); manage your own listings in the business dashboard.
+
+## Business dashboard
+
+Open `/admin` to manage products, stock, orders, customers, sales reports and store settings. The storefront and dashboard use the same database, with secure owner access and cash-on-delivery checkout.
+
+See [Zylo Business setup and operations](docs/business-dashboard.md) for migrations, your one-time owner setup link, order rules, exports and test instructions.

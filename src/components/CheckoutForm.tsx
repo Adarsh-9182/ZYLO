@@ -14,7 +14,7 @@ import { Reveal } from "./Reveal";
  * Delivery is free on every order. This mirrors the server rule in lib/orders.ts
  * for display only — the total the order is placed at is the server's.
  */
-const SHIPPING = 0;
+
 
 const FIELDS = [
   { name: "customerName", label: "Full name", autoComplete: "name", placeholder: "Adarsh Bhardwaj", span: 2 },
@@ -26,13 +26,14 @@ const FIELDS = [
   { name: "pincode", label: "PIN code", autoComplete: "postal-code", placeholder: "141001", span: 1, inputMode: "numeric" as const },
 ] as const;
 
-export function CheckoutForm() {
+export function CheckoutForm({shippingPaise=0,freeShippingAbovePaise=0}:{shippingPaise?:number;freeShippingAbovePaise?:number}) {
   const { items, lines, subtotal, savings, clear } = useCart();
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const shipping = SHIPPING;
+  const [requestKey] = useState(() => crypto.randomUUID());
+  const shipping = subtotal*100>=freeShippingAbovePaise ? 0 : shippingPaise/100;
   const total = subtotal + shipping;
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
@@ -41,7 +42,7 @@ export function CheckoutForm() {
     setBusy(true);
 
     const form = new FormData(event.currentTarget);
-    const payload: Record<string, unknown> = { lines };
+    const payload: Record<string, unknown> = { lines: lines.map(l=>({productId:l.id,qty:l.qty})), requestKey };
     for (const f of FIELDS) payload[f.name] = String(form.get(f.name) ?? "");
 
     const res = await fetch("/api/orders", {

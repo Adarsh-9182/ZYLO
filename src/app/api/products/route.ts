@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { inArray } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
 import { products } from "@/db/schema";
 
@@ -19,6 +19,6 @@ export async function GET(request: Request) {
 
   if (ids.length === 0) return NextResponse.json({ products: [] });
 
-  const rows = await db.select().from(products).where(inArray(products.id, ids));
+  const rows = await db.select().from(products).where(and(inArray(products.id,ids),eq(products.active,true)));
   return NextResponse.json({ products: rows });
 }

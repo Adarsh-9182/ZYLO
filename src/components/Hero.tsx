@@ -52,7 +52,7 @@ export function Hero({ floats }: { floats: Product[] }) {
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-flame opacity-75" />
                 <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-flame" />
               </span>
-              Live · 194 deals dropping today
+              Discover your next everyday favourite
             </motion.span>
 
             <h1 className="mt-5 text-[clamp(2.6rem,7vw,5.4rem)] font-extrabold leading-[0.95] tracking-[-0.03em] text-white">
@@ -131,7 +131,7 @@ export function Hero({ floats }: { floats: Product[] }) {
               className="mt-9 flex flex-wrap gap-x-7 gap-y-3 text-xs text-haze"
             >
               {[
-                { icon: Truck, label: "Free delivery" },
+                { icon: Truck, label: "Doorstep delivery" },
                 { icon: RotateCcw, label: "7-day easy returns" },
                 { icon: ShieldCheck, label: "Secure payments" },
               ].map(({ icon: Icon, label }) => (

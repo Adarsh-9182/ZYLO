@@ -7,7 +7,7 @@ export type { Product, SortKey } from "./format";
 export { inr, formatINR, mrp, categoryLabel, sortProducts } from "./format";
 
 export function allProducts() {
-  return db.select().from(t).orderBy(asc(t.id));
+  return db.select().from(t).where(eq(t.active, true)).orderBy(asc(t.id));
 }
 
 /**
@@ -26,11 +26,20 @@ export function allProducts() {
  * the query.
  */
 export function someProducts(limit = 20) {
-  return db.select().from(t).orderBy(asc(t.id)).limit(limit);
+  return db
+    .select()
+    .from(t)
+    .where(eq(t.active, true))
+    .orderBy(asc(t.id))
+    .limit(limit);
 }
 
 export function houseProducts() {
-  return db.select().from(t).where(eq(t.house, true)).orderBy(asc(t.id));
+  return db
+    .select()
+    .from(t)
+    .where(and(eq(t.house, true), eq(t.active, true)))
+    .orderBy(asc(t.id));
 }
 
 /**
@@ -42,8 +51,11 @@ export function houseProducts() {
  * non-numeric path instead of the 404 the page already knew how to render.
  */
 export function byId(id: number) {
-  if (!Number.isInteger(id) || id <= 0) return Promise.resolve(undefined);
-  return db.query.products.findFirst({ where: eq(t.id, id) });
+  if (!Number.isSafeInteger(id) || id <= 0 || id > 2147483647)
+    return Promise.resolve(undefined);
+  return db.query.products.findFirst({
+    where: and(eq(t.id, id), eq(t.active, true)),
+  });
 }
 
 export function reviewsFor(productId: number) {
@@ -55,7 +67,11 @@ export function reviewsFor(productId: number) {
 }
 
 export function byCategory(slug: string, limit?: number) {
-  const q = db.select().from(t).where(eq(t.category, slug)).orderBy(asc(t.id));
+  const q = db
+    .select()
+    .from(t)
+    .where(and(eq(t.category, slug), eq(t.active, true)))
+    .orderBy(asc(t.id));
   return limit ? q.limit(limit) : q;
 }
 
@@ -64,7 +80,7 @@ export function related(p: { id: number; category: string }, count = 6) {
   return db
     .select()
     .from(t)
-    .where(and(eq(t.category, p.category), ne(t.id, p.id)))
+    .where(and(eq(t.category, p.category), ne(t.id, p.id), eq(t.active, true)))
     .limit(count);
 }
 
@@ -72,27 +88,38 @@ export async function categories() {
   const rows = await db
     .selectDistinct({ category: t.category })
     .from(t)
+    .where(eq(t.active, true))
     .orderBy(asc(t.category));
   return rows.map((row) => row.category);
 }
 
 /** Deals = biggest discounts, which is what an offers rail should actually surface. */
 export function deals(limit = 12) {
-  return db.select().from(t).orderBy(desc(t.discountPercentage)).limit(limit);
+  return db
+    .select()
+    .from(t)
+    .where(eq(t.active, true))
+    .orderBy(desc(t.discountPercentage))
+    .limit(limit);
 }
 
 export function topRated(limit = 12) {
   return db
     .select()
     .from(t)
-    .where(gte(t.rating, 4.5))
+    .where(and(gte(t.rating, 4.5), eq(t.active, true)))
     .orderBy(desc(t.rating))
     .limit(limit);
 }
 
 /** Low stock reads as "selling fast", which is what the trending rail is for. */
 export function trending(limit = 12) {
-  return db.select().from(t).where(lt(t.stock, 40)).orderBy(asc(t.id)).limit(limit);
+  return db
+    .select()
+    .from(t)
+    .where(and(lt(t.stock, 40), gte(t.stock, 1), eq(t.active, true)))
+    .orderBy(asc(t.id))
+    .limit(limit);
 }
 
 export function search(query: string, limit = 200) {
@@ -103,12 +130,15 @@ export function search(query: string, limit = 200) {
     .select()
     .from(t)
     .where(
-      or(
-        ilike(t.title, like),
-        ilike(t.category, like),
-        ilike(t.brand, like),
-        sql`exists (select 1 from unnest(${t.tags}) tag where tag ilike ${like})`
-      )
+      and(
+        eq(t.active, true),
+        or(
+          ilike(t.title, like),
+          ilike(t.category, like),
+          ilike(t.brand, like),
+          sql`exists (select 1 from unnest(${t.tags}) tag where tag ilike ${like})`,
+        ),
+      ),
     )
     .orderBy(asc(t.id))
     .limit(limit);
@@ -123,6 +153,7 @@ export async function categoryEntries() {
       image: sql<string>`min(${t.thumbnail})`,
     })
     .from(t)
+    .where(eq(t.active, true))
     .groupBy(t.category)
     .orderBy(desc(sql`count(*)`));
 }

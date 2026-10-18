@@ -81,14 +81,14 @@ export default async function Home() {
           />
           <div className="relative max-w-xl">
             <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-flame">
-              Zylo Prime
+              The Zylo edit
             </p>
             <h2 className="mt-3 text-3xl font-extrabold leading-tight tracking-tight text-white sm:text-5xl">
-              Free delivery on <span className="text-gradient">everything</span>, all year.
+              Your next <span className="text-gradient">everyday favourite</span> is here.
             </h2>
             <p className="mt-4 text-sm leading-relaxed text-haze">
-              Next-day dispatch, priority support and member-only pricing on all 24
-              categories. Cancel whenever you like.
+              Explore the collection, find something you love and pay when it arrives.
+              Check each product for its delivery and return details.
             </p>
             <Link
               href="/search"
