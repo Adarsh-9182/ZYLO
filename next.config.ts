@@ -4,6 +4,15 @@ const nextConfig: NextConfig = {
   experimental: { serverActions: { bodySizeLimit: "3mb" } },
   async headers() {
     return [
+      ...["/login", "/signup", "/account/:path*", "/forgot-password", "/reset-password", "/api/auth/:path*"].map(source => ({
+        source,
+        headers: [
+          { key: "Cache-Control", value: "private, no-store" },
+          { key: "X-Frame-Options", value: "DENY" },
+          { key: "Referrer-Policy", value: "no-referrer" },
+          { key: "X-Robots-Tag", value: "noindex, nofollow" },
+        ],
+      })),
       {
         source: "/admin/:path*",
         headers: [

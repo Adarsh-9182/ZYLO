@@ -78,3 +78,5 @@ connected. The initial sample catalog comes from [DummyJSON](https://dummyjson.c
 Open `/admin` to manage products, stock, orders, customers, sales reports and store settings. The storefront and dashboard use the same database, with secure owner access and cash-on-delivery checkout.
 
 See [Zylo Business setup and operations](docs/business-dashboard.md) for migrations, your one-time owner setup link, order rules, exports and test instructions.
+
+Customer email/password and Google sign-in are available at `/login`, with signup, private order history and password reset. See [customer account setup](docs/customer-accounts.md) for managed-auth environment settings, domain configuration and the customer-order migration.

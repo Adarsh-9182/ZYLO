@@ -26,6 +26,8 @@ async function main() {
     .map((s) => s.trim())
     .filter(Boolean);
   await sql.transaction(ddl.map((q) => sql.query(q)));
+  const customers = (await readFile("scripts/migrate-customers.sql", "utf8")).split(";").map(s=>s.trim()).filter(Boolean);
+  await sql.transaction(customers.map(q=>sql.query(q)));
   const password = randomBytes(20).toString("hex"),
     salt = randomBytes(16).toString("hex"),
     hash = salt + ":" + scryptSync(password, salt, 64).toString("hex");

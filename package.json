@@ -17,11 +17,13 @@
     "test:e2e": "playwright test",
     "db:migrate:orders": "tsx scripts/migrate-orders.ts",
     "db:migrate:admin": "tsx scripts/migrate-admin.ts",
+    "db:migrate:customers": "tsx scripts/migrate-customers.ts",
     "admin:setup": "tsx scripts/create-owner-setup.ts",
     "test:db:setup": "tsx scripts/setup-test-db.ts",
     "test:dev": "node --import ./scripts/test-env.mjs node_modules/next/dist/bin/next dev --hostname 127.0.0.1 --port 3100"
   },
   "dependencies": {
+    "@neondatabase/auth": "0.6.0-beta",
     "@neondatabase/serverless": "^1.1.0",
     "drizzle-orm": "^0.45.2",
     "framer-motion": "^13.1.1",

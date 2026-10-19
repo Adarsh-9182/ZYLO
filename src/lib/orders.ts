@@ -8,6 +8,7 @@ import { redirect } from "next/navigation";
 import { digest, owner } from "@/lib/admin/auth";
 import { adminSql } from "@/lib/admin/db";
 import { eq, asc } from "drizzle-orm";
+import { customer } from "@/lib/customer-auth/server";
 export type { Order, OrderItem } from "@/db/schema";
 const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 const newReference = () =>
@@ -20,6 +21,7 @@ export interface OrderLine {
   readonly qty: number;
 }
 export interface Address {
+  readonly customerId?: string;
   readonly customerName: string;
   readonly email: string;
   readonly phone: string;
@@ -88,8 +90,8 @@ export async function placeOrder(
  totals AS (SELECT coalesce(sum(unit_paise::bigint*qty),0)::bigint AS subtotal FROM priced),
  ship AS (SELECT CASE WHEN t.subtotal>=s.free_shipping_above_paise THEN 0 ELSE s.shipping_paise END AS shipping FROM totals t CROSS JOIN store_settings s WHERE s.id=1),
  decremented AS (UPDATE products p SET stock=l.stock-w.qty,version=p.version+1,updated_at=now() FROM wanted w,locked l,feasible f WHERE p.id=w.product_id AND l.id=p.id AND f.ok RETURNING p.id),
- new_order AS (INSERT INTO orders(reference,customer_name,email,phone,address_line,city,state,pincode,subtotal_paise,shipping_paise,total_paise,payment_method,request_key,request_hash)
- SELECT $3,$4,$5,$6,$7,$8,$9,$10,t.subtotal,s.shipping,t.subtotal+s.shipping,'cod',$11,$12 FROM feasible f,totals t,ship s WHERE f.ok RETURNING id,reference),
+ new_order AS (INSERT INTO orders(reference,customer_name,email,phone,address_line,city,state,pincode,subtotal_paise,shipping_paise,total_paise,payment_method,request_key,request_hash,customer_id)
+ SELECT $3,$4,$5,$6,$7,$8,$9,$10,t.subtotal,s.shipping,t.subtotal+s.shipping,'cod',$11,$12,$13 FROM feasible f,totals t,ship s WHERE f.ok RETURNING id,reference),
  written AS (INSERT INTO order_items(order_id,product_id,title,thumbnail,unit_paise,qty) SELECT o.id,p.product_id,p.title,p.thumbnail,p.unit_paise,p.qty FROM new_order o,priced p RETURNING id),
  movements AS (INSERT INTO inventory_movements(product_id,product_title,delta,reason,order_id) SELECT p.product_id,p.title,-p.qty,'Order placed',o.id FROM priced p,new_order o),
  event AS (INSERT INTO order_events(order_id,status,note) SELECT id,'placed','Order placed by customer' FROM new_order)
@@ -107,6 +109,7 @@ export async function placeOrder(
         address.pincode,
         requestKey,
         requestHash,
+        address.customerId ?? null,
       ],
     );
     const result = rows[0];
@@ -138,7 +141,11 @@ export async function orderByReference(reference: string) {
   const access = token
     ? await sql`SELECT 1 FROM order_access WHERE token_hash=${digest(token)} AND order_id=${order.id} AND expires_at>now()`
     : [];
-  if (!access.length && !(await owner())) redirect("/track-order");
+  if (!access.length && !(await owner())) {
+    const user = await customer();
+    const ownsOrder = user && (order.customerId === user.id || (user.emailVerified && user.email.toLowerCase() === order.email.toLowerCase()));
+    if (!ownsOrder) redirect("/track-order");
+  }
 
   const items = await db
     .select()

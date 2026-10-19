@@ -90,8 +90,8 @@ export type Review = typeof reviews.$inferSelect;
 /**
  * A placed order.
  *
- * Zylo has no accounts, so an order is identified by a reference the shopper
- * can be given and look up — not by a user id. The reference is short, upper
+ * Guest orders are identified by a reference. Signed-in orders also retain
+ * their customer id. The reference is short, upper
  * case and avoids the characters people misread out loud (O/0, I/1), because
  * its whole job is to survive being read off a screen.
  *
@@ -106,6 +106,7 @@ export const orders = pgTable(
     reference: varchar("reference", { length: 16 }).notNull().unique(),
 
     customerName: varchar("customer_name", { length: 120 }).notNull(),
+    customerId: text("customer_id"),
     email: varchar("email", { length: 200 }).notNull(),
     phone: varchar("phone", { length: 20 }).notNull(),
     addressLine: text("address_line").notNull(),
@@ -131,7 +132,10 @@ export const orders = pgTable(
     version: integer("version").notNull().default(1),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [index("orders_reference_idx").on(t.reference)]
+  (t) => [
+    index("orders_reference_idx").on(t.reference),
+    index("orders_customer_id_idx").on(t.customerId),
+  ]
 );
 
 /**

@@ -4,6 +4,7 @@ import { adminSql } from "@/lib/admin/db";
 import { digest, rateLimit } from "@/lib/admin/auth";
 import { NextResponse } from "next/server";
 import { placeOrder, type OrderLine } from "@/lib/orders";
+import { customer } from "@/lib/customer-auth/server";
 
 /** Everything an address field is allowed to be. */
 const FIELDS = [
@@ -92,6 +93,8 @@ export async function POST(request: Request) {
         { error: "Too many checkout attempts. Please try again later." },
         { status: 429 },
       );
+    const user = await customer();
+    if (user) address.customerId = user.id;
     const result = await placeOrder(
       lines,
       address as unknown as Parameters<typeof placeOrder>[1],

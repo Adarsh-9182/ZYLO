@@ -1,5 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { customerReturnTo } from "../src/lib/customer-auth/return-to";
+import { customerAuthError } from "../src/lib/customer-auth/errors";
 import {
   canTransition,
   csvCell,
@@ -50,4 +52,36 @@ test("stock quantities must be bounded integers", () => {
 test("customer emails normalize for a single history", () => {
   assert.equal(emailAddress(" Buyer@Example.com "), "buyer@example.com");
   assert.throws(() => emailAddress("not-an-email"));
+});
+test("customer login return destinations cannot redirect to external sites", () => {
+  for (const value of [
+    "https://evil.test",
+    "//evil.test",
+    "/\\evil.test",
+    "/admin",
+    "/account?next=https://evil.test",
+    "javascript:alert(1)",
+  ]) {
+    assert.equal(customerReturnTo(value), "/account");
+  }
+  assert.equal(customerReturnTo("/checkout"), "/checkout");
+  assert.equal(
+    customerReturnTo("/order/ZY-ABCDEFGHJKLM"),
+    "/order/ZY-ABCDEFGHJKLM",
+  );
+});
+test("auth failures give useful credential feedback and hide provider configuration", () => {
+  assert.equal(
+    customerAuthError({ status: 401 }),
+    "Email or password is incorrect.",
+  );
+  assert.equal(
+    customerAuthError(new Error("Invalid email or password")),
+    "Email or password is incorrect.",
+  );
+  assert.equal(
+    customerAuthError({ message: "Invalid callbackURL" }),
+    "Sign-in is temporarily unavailable. Please try again shortly.",
+  );
+  assert.match(customerAuthError({ status: 429 }), /wait a few minutes/);
 });

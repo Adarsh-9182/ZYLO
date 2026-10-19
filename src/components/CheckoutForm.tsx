@@ -26,7 +26,7 @@ const FIELDS = [
   { name: "pincode", label: "PIN code", autoComplete: "postal-code", placeholder: "141001", span: 1, inputMode: "numeric" as const },
 ] as const;
 
-export function CheckoutForm({shippingPaise=0,freeShippingAbovePaise=0}:{shippingPaise?:number;freeShippingAbovePaise?:number}) {
+export function CheckoutForm({shippingPaise=0,freeShippingAbovePaise=0,customer}:{shippingPaise?:number;freeShippingAbovePaise?:number;customer?:{name:string;email:string}}) {
   const { items, lines, subtotal, savings, clear } = useCart();
   const router = useRouter();
   const [busy, setBusy] = useState(false);
@@ -118,6 +118,7 @@ export function CheckoutForm({shippingPaise=0,freeShippingAbovePaise=0}:{shippin
                   inputMode={"inputMode" in f ? f.inputMode : undefined}
                   autoComplete={f.autoComplete}
                   placeholder={f.placeholder}
+                  defaultValue={f.name === "customerName" ? customer?.name : f.name === "email" ? customer?.email : undefined}
                   required
                   className="h-12 w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 text-[15px] text-white outline-none transition-colors placeholder:text-haze/60 focus:border-flame/60"
                 />
